@@ -26,27 +26,26 @@
         <version>2</version>
     </parent>
 
-    <artifactId>doyto-query-parent</artifactId>
-    <name>DoytoQuery</name>
+    <artifactId>doyto-query-memorydb-repo</artifactId>
+    <name>DoytoQueryMemoryDB</name>
     <packaging>pom</packaging>
     <version>${revision}</version>
-    <url>https://query.doyto.win/</url>
+    <url>https://www.doyto.win/</url>
 
     <properties>
         <revision>1.0.0-SNAPSHOT</revision>
 
         <spring-boot.version>2.7.5</spring-boot.version>
-        <embedded-mongo.version>3.5.1</embedded-mongo.version>
-
+        <jackson.version.databind>2.14.0</jackson.version.databind>
         <sourceDirectory>src/main/java</sourceDirectory>
-        <skipDeploy>false</skipDeploy>
+        <skipDeploy>true</skipDeploy>
 
         <jacoco.destFile>${user.dir}/target/jacoco.exec</jacoco.destFile>
         <jacoco.dataFile>${user.dir}/target/jacoco.exec</jacoco.dataFile>
     </properties>
 
     <modules>
-        <module>doyto-query-memory</module>
+        <module>doyto-query-memorydb</module>
     </modules>
 
     <dependencies>
