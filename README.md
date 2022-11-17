@@ -3,8 +3,11 @@
 [![Code Lines](https://sonarcloud.io/api/project_badges/measure?project=win.doyto%3Adoyto-query-memorydb&metric=ncloc)](https://sonarcloud.io/component_measures?id=win.doyto%3Adoyto-query-memorydb&metric=ncloc)
 [![Coverage Status](https://sonarcloud.io/api/project_badges/measure?project=win.doyto%3Adoyto-query-memorydb&metric=coverage)](https://sonarcloud.io/component_measures?id=win.doyto%3Adoyto-query-memorydb&metric=coverage)
 
-DoytoQueryMemoryDB - A Java In-Memory Database
+DoytoQueryMemoryDB - A Java Embedded Relational Database
 ------
+
+The `DoytoQueryMemoryDB` project is derived from `doyto-query-memory` which works as a mock for TDD in database access development.
+Now it is seperated from `DoytoQuery` project and aiming to be an embedded relational database without query language.
 
 License
 -------
