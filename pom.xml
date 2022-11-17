@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>doyto-query-memorydb-repo</artifactId>
-    <name>DoytoQueryMemoryDB</name>
+    <name>DoytoQueryMemoryDBRepository</name>
     <packaging>pom</packaging>
     <version>${revision}</version>
     <url>https://www.doyto.win/</url>

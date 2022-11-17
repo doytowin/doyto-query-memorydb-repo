@@ -27,7 +27,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>doyto-query-memorydb</artifactId>
-    <name>DoytoQueryMemoryDBRepository</name>
+    <name>DoytoQueryMemoryDB</name>
 
     <properties>
         <skipDeploy>false</skipDeploy>
