@@ -26,7 +26,6 @@ import win.doyto.query.config.GlobalConfiguration;
 import win.doyto.query.core.DataAccess;
 import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.core.IdWrapper;
-import win.doyto.query.core.QuerySuffix;
 import win.doyto.query.entity.Persistable;
 import win.doyto.query.util.BeanUtil;
 import win.doyto.query.util.ColumnUtil;
@@ -40,8 +39,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import static win.doyto.query.core.QuerySuffix.isValidValue;
-import static win.doyto.query.core.QuerySuffix.resolve;
 import static win.doyto.query.util.CommonUtil.*;
 
 /**
@@ -156,50 +153,12 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         return list.size();
     }
 
-    /**
-     * 根据Query对象筛选符合条件的Entity对象
-     *
-     * @param query  Query
-     * @param entity Entity
-     * @return true, Entity符合条件需要保留; false, Entity不符合条件需要过滤掉
-     */
-    protected boolean filterByQuery(Q query, E entity) {
-        for (Field field : query.getClass().getDeclaredFields()) {
-            if (supportFilter(field)) {
-                Object value = readField(field, query);
-                if (isValidValue(value, field) && shouldDiscard(entity, field.getName(), value)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private boolean supportFilter(Field field) {
-        return ColumnUtil.filterForEntity(field);
-    }
-
-    protected boolean shouldDiscard(E entity, String queryFieldName, Object queryFieldValue) {
-        if (containsOr(queryFieldName)) {
-            boolean result = true;
-            for (String fieldName : splitByOr(queryFieldName)) {
-                result &= shouldDiscard(entity, fieldName, queryFieldValue);
-            }
-            return result;
-        }
-        QuerySuffix querySuffix = resolve(queryFieldName);
-        String columnName = querySuffix.resolveColumnName(queryFieldName);
-        Matcher matcher = FilterExecutor.get(querySuffix);
-
-        Object entityFieldValue = readField(entity, columnName);
-        return !matcher.match(queryFieldValue, entityFieldValue);
-    }
-
     @Override
     public List<E> query(Q query) {
+        BranchConditionNode root = new BranchConditionNode(query);
         List<E> queryList = entitiesMap
                 .values().stream()
-                .filter(item -> filterByQuery(query, item))
+                .filter(root)
                 .collect(Collectors.toList());
 
         if (query.getSort() != null) {
@@ -252,7 +211,8 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
 
     @Override
     public long count(Q query) {
-        return entitiesMap.values().stream().filter(item -> filterByQuery(query, item)).count();
+        BranchConditionNode root = new BranchConditionNode(query);
+        return entitiesMap.values().stream().filter(root).count();
     }
 
 }

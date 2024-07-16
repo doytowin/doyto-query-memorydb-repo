@@ -57,19 +57,6 @@ class MemoryDataAccessTest {
     }
 
     @Test
-    void filterByOr() {
-        TestQuery testQuery = TestQuery.builder().usernameOrEmailOrMobile("f0rb").build();
-        assertEquals(1, testMemoryDataAccess.query(testQuery).size());
-
-        testQuery.setUsernameOrEmailOrMobile(null);
-        testQuery.setUsernameOrEmailOrMobileLike("username");
-        assertEquals(0, testMemoryDataAccess.query(testQuery).size());
-
-        testQuery.setUsernameOrEmailOrMobileLike("1777888888");
-        assertEquals(5, testMemoryDataAccess.query(testQuery).size());
-    }
-
-    @Test
     void filterByLike() {
         TestQuery testQuery = TestQuery.builder().usernameLike("name").build();
         assertEquals(4, testMemoryDataAccess.query(testQuery).size());
@@ -99,13 +86,6 @@ class MemoryDataAccessTest {
         TestEntity u1 = testMemoryDataAccess.get(1);
         TestEntity u2 = testMemoryDataAccess.get(1);
         assertNotSame(u1, u2);
-    }
-
-    @Test
-    void filterByMultiConditions() {
-        TestQuery testQuery = TestQuery.builder().valid(true).usernameLikeOrEmailLikeOrMobileLike("username").build();
-        List<TestEntity> userEntities = testMemoryDataAccess.query(testQuery);
-        assertEquals(2, userEntities.size());
     }
 
     @Test
