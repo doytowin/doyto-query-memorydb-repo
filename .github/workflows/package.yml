@@ -10,4 +10,5 @@ jobs:
     uses: doytowin/doyto-devops/.github/workflows/package.yml@main
     secrets: inherit
     with:
+      java-version: '17'
       repo: ${{ github.repository }}

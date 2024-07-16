@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import win.doyto.query.annotation.GeneratedValue;
+import win.doyto.query.annotation.Id;
 import win.doyto.query.config.GlobalConfiguration;
 import win.doyto.query.core.DataAccess;
 import win.doyto.query.core.DoytoQuery;
@@ -37,8 +39,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 
 import static win.doyto.query.core.QuerySuffix.isValidValue;
 import static win.doyto.query.core.QuerySuffix.resolve;

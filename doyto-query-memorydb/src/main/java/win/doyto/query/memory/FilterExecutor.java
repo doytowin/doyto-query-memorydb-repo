@@ -42,7 +42,6 @@ class FilterExecutor {
         map.put(NotLike, new NotLikeMatcher());
         map.put(Start, new StartMatcher());
         map.put(Null, new NullMatcher());
-        map.put(NotNull, new NotNullMatcher());
         map.put(In, (qv, ev) -> ((Collection<?>) qv).contains(ev));
         map.put(NotIn, (qv, ev) -> !((Collection<?>) qv).contains(ev));
         map.put(Gt, (qv, ev) -> ((Comparable<Object>) ev).compareTo(qv) > 0);
@@ -82,22 +81,15 @@ class FilterExecutor {
         }
     }
 
-    static class NotNullMatcher implements Matcher {
+    static class NullMatcher implements Matcher {
         @Override
         public boolean doMatch(Object qv, Object ev) {
-            return ev != null;
+            return Boolean.TRUE.equals(qv) == (ev == null);
         }
 
         @Override
         public boolean isComparable(Object qv, Object ev) {
             return true;
-        }
-    }
-
-    static class NullMatcher extends NotNullMatcher {
-        @Override
-        public boolean doMatch(Object qv, Object ev) {
-            return !super.doMatch(qv, ev);
         }
     }
 

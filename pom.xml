@@ -23,7 +23,7 @@
     <parent>
         <groupId>win.doyto</groupId>
         <artifactId>doyto-oss-parent</artifactId>
-        <version>2</version>
+        <version>5</version>
     </parent>
 
     <artifactId>doyto-query-memorydb-repo</artifactId>
@@ -33,13 +33,12 @@
     <url>https://www.doyto.win/</url>
 
     <properties>
-        <revision>1.0.0-SNAPSHOT</revision>
+        <revision>2.0.1-SNAPSHOT</revision>
 
-        <spring-boot.version>2.7.5</spring-boot.version>
-        <jackson.version.databind>2.14.0</jackson.version.databind>
+        <spring-boot.version>3.3.1</spring-boot.version>
         <sourceDirectory>src/main/java</sourceDirectory>
-        <skipDeploy>true</skipDeploy>
 
+        <maven.deploy.skip>true</maven.deploy.skip>
         <jacoco.destFile>${user.dir}/target/jacoco.exec</jacoco.destFile>
         <jacoco.dataFile>${user.dir}/target/jacoco.exec</jacoco.dataFile>
     </properties>
@@ -140,36 +139,29 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>2.5.2</version>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
                 <configuration>
-                    <skip>${skipDeploy}</skip>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <testSource>${java.version}</testSource>
+                    <testTarget>${java.version}</testTarget>
+                    <fork>true</fork>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                        <arg>-Xlint:unchecked</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>2.8.2</version>
-                <configuration>
-                    <skip>${skipDeploy}</skip>
-                </configuration>
-            </plugin>
-
             <!-- 更新pom版本号-->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
-                <version>1.2.7</version>
+                <version>1.6.0</version>
                 <configuration>
                     <updatePomFile>true</updatePomFile>
-                    <flattenMode>bom</flattenMode>
+                    <flattenMode>ossrh</flattenMode>
                     <flattenedPomFilename>target/${project.artifactId}.pom.xml</flattenedPomFilename>
-                    <pomElements>
-                        <version>resolve</version>
-                        <properties>resolve</properties>
-                        <dependencies>resolve</dependencies>
-                        <pluginManagement>resolve</pluginManagement>
-                    </pomElements>
                 </configuration>
                 <executions>
                     <execution>
@@ -190,10 +182,11 @@
             </plugin>
         </plugins>
     </build>
-    <scm>
-        <tag>master</tag>
-        <url>git@github.com:f0rb/doyto-query.git</url>
-        <connection>scm:git:git@github.com:f0rb/doyto-query.git</connection>
-        <developerConnection>scm:git:git@github.com:f0rb/doyto-query.git</developerConnection>
+
+    <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
+        <tag>main</tag>
+        <url>https://github.com/doytowin/doyto-query-memorydb</url>
+        <connection>scm:git:https://github.com/doytowin/doyto-query-memorydb.git</connection>
+        <developerConnection>scm:git:https://github.com/doytowin/doyto-query-memorydb.git</developerConnection>
     </scm>
 </project>

@@ -16,14 +16,19 @@ jobs:
     uses: doytowin/doyto-devops/.github/workflows/build.yml@main
     secrets: inherit
     with:
-      sonar-project-name: 'doyto-query-template'
-      sonar-project-key: 'win.doyto:doyto-query-template'
+      java-version: '17'
+      sonar-project-name: 'doyto-query-memorydb-repo'
+      sonar-project-key: 'win.doyto:doyto-query-memorydb-repo'
   javadoc:
     name: Call Javadoc Workflow
     uses: doytowin/doyto-devops/.github/workflows/javadoc.yml@main
+    with:
+      java-version: '17'
   deploy:
     name: Call Deploy Workflow
     needs: [ build, javadoc ]
     if: github.event_name != 'pull_request'
     uses: doytowin/doyto-devops/.github/workflows/deploy.yml@main
     secrets: inherit
+    with:
+      java-version: '17'
