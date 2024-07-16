@@ -170,4 +170,15 @@ class MemoryDataAccessTest {
         assertEquals(0, cnt);
         assertNull(testMemoryDataAccess.get(-1));
     }
+
+    @Test
+    void shouldNotChangeOriginEntityWhenChangeQueryEntity() {
+        TestQuery testQuery = TestQuery.builder().build();
+        List<TestEntity> entities = testMemoryDataAccess.query(testQuery);
+        TestEntity testEntity = entities.get(0);
+        testEntity.setMemo("New Memo");
+
+        assertThat(testMemoryDataAccess.get(1).getMemo()).isNotEqualTo("New Memo");
+    }
+
 }

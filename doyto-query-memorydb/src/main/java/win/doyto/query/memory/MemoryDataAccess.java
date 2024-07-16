@@ -165,7 +165,7 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         if (query.needPaging()) {
             stream = truncateByPaging(stream, query);
         }
-        return stream.toList();
+        return stream.map(SerializationUtils::clone).toList();
     }
 
     private Stream<E> truncateByPaging(Stream<E> stream, Q query) {
