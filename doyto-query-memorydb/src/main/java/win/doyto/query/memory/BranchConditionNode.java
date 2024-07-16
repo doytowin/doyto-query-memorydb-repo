@@ -34,6 +34,7 @@ import static win.doyto.query.util.CommonUtil.readField;
 public class BranchConditionNode implements ConditionNode {
 
     private Predicate<Object> predicate;
+    private int count;
 
     /**
      * Construct a branch node of a screening decision tree
@@ -57,14 +58,18 @@ public class BranchConditionNode implements ConditionNode {
                 Object value = readField(field, target);
                 if (isValidValue(value, field)) {
                     if (field.getName().endsWith("Or")) {
-                        predicate = predicate.and(new BranchConditionNode(value, false));
-                    } else {
-                        LeafConditionNode other = new LeafConditionNode(field, value);
-                        if (and) {
-                            predicate = predicate.and(other);
-                        } else {
-                            predicate = predicate.or(other);
+                        BranchConditionNode orNode = new BranchConditionNode(value, false);
+                        if (orNode.count > 0) {
+                            predicate = predicate.and(orNode);
                         }
+                    } else {
+                        LeafConditionNode leafNode = new LeafConditionNode(field, value);
+                        if (and) {
+                            predicate = predicate.and(leafNode);
+                        } else {
+                            predicate = predicate.or(leafNode);
+                        }
+                        count++;
                     }
                 }
             }

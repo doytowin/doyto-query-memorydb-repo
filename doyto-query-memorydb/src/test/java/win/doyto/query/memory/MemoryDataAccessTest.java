@@ -189,4 +189,12 @@ class MemoryDataAccessTest {
         List<TestEntity> entities = testMemoryDataAccess.query(testQuery);
         assertThat(entities).hasSize(1);
     }
+
+    @Test
+    void shouldNotKeepEmptyOrNode() {
+        Account accountOr = Account.builder().build();
+        TestQuery testQuery = TestQuery.builder().accountOr(accountOr).build();
+        List<TestEntity> entities = testMemoryDataAccess.query(testQuery);
+        assertThat(entities).hasSize(5);
+    }
 }
