@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static win.doyto.query.util.CommonUtil.*;
 
@@ -156,28 +157,20 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
     @Override
     public List<E> query(Q query) {
         BranchConditionNode root = new BranchConditionNode(query);
-        List<E> queryList = entitiesMap
-                .values().stream()
-                .filter(root)
-                .collect(Collectors.toList());
+        Stream<E> stream = entitiesMap.values().stream().filter(root);
 
         if (query.getSort() != null) {
-            doSort(queryList, query.getSort());
+            stream = doSort(stream, query.getSort());
         }
         if (query.needPaging()) {
-            queryList = truncateByPaging(queryList, query);
+            stream = truncateByPaging(stream, query);
         }
-
-        return queryList;
+        return stream.toList();
     }
 
-    private List<E> truncateByPaging(List<E> queryList, Q query) {
-        int from = GlobalConfiguration.calcOffset(query);
-        int end = Math.min(queryList.size(), from + query.getPageSize());
-        if (from <= end) {
-            queryList = queryList.subList(from, end);
-        }
-        return queryList;
+    private Stream<E> truncateByPaging(Stream<E> stream, Q query) {
+        long from = GlobalConfiguration.calcOffset(query);
+        return stream.skip(from).limit(query.getPageSize());
     }
 
     @Override
@@ -185,7 +178,7 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         List<E> entities = query(q);
         List<V> objects = new ArrayList<>(entities.size());
         if (columns.length == 1) {
-            return entities.stream().map(entity -> (V) readField(entity, columns[0])).collect(Collectors.toList());
+            return entities.stream().map(entity -> (V) readField(entity, columns[0])).toList();
         } else {
             for (E e : entities) {
                 objects.add(BeanUtil.convertTo(e, classV));
@@ -194,11 +187,11 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         return objects;
     }
 
-    protected void doSort(List<E> queryList, String sort) {
+    protected Stream<E> doSort(Stream<E> stream, String sort) {
         String[] orders = StringUtils.split(sort, ";");
         for (int i = orders.length - 1; i >= 0; i--) {
             String order = orders[i];
-            queryList.sort((o1, o2) -> {
+            stream = stream.sorted((o1, o2) -> {
                 String[] pd = StringUtils.split(order, ",");
                 String property = toCamelCase(pd[0]);
                 Comparable<Object> c1 = (Comparable<Object>) readField(o1, property);
@@ -207,6 +200,7 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
                 return "asc".equalsIgnoreCase(pd[1]) ? ret : -ret;
             });
         }
+        return stream;
     }
 
     @Override

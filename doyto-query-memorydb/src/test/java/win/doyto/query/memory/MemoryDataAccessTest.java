@@ -45,6 +45,15 @@ class MemoryDataAccessTest {
     }
 
     @Test
+    void paging() {
+        TestQuery testQuery = TestQuery.builder().pageNumber(2).pageSize(2).build();
+        List<TestEntity> entities = testMemoryDataAccess.query(testQuery);
+        assertThat(entities).hasSize(2)
+                .extracting("id")
+                .containsExactly(3, 4);
+    }
+
+    @Test
     void filterByUsername() {
         TestQuery testQuery = TestQuery.builder().username("f0rb").build();
         assertEquals(1, testMemoryDataAccess.query(testQuery).size());

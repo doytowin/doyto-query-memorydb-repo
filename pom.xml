@@ -35,6 +35,7 @@
     <properties>
         <revision>2.0.1-SNAPSHOT</revision>
 
+        <java.version>17</java.version>
         <spring-boot.version>3.3.1</spring-boot.version>
         <sourceDirectory>src/main/java</sourceDirectory>
 
