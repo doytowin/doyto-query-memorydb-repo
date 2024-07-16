@@ -197,4 +197,11 @@ class MemoryDataAccessTest {
         List<TestEntity> entities = testMemoryDataAccess.query(testQuery);
         assertThat(entities).hasSize(5);
     }
+
+    @Test
+    void supportSuffixOrWithCollectionWithBasicType() {
+        TestQuery testQuery = TestQuery.builder().usernameContainOr(Arrays.asList("name1", "name3")).build();
+        List<TestEntity> entities = testMemoryDataAccess.query(testQuery);
+        assertThat(entities).hasSize(2);
+    }
 }

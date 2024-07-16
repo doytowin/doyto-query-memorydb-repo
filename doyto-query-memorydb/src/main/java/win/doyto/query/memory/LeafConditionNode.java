@@ -17,9 +17,9 @@
 package win.doyto.query.memory;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import win.doyto.query.core.QuerySuffix;
 
-import java.lang.reflect.Field;
 import java.util.function.Predicate;
 
 import static win.doyto.query.core.QuerySuffix.resolve;
@@ -30,23 +30,27 @@ import static win.doyto.query.util.CommonUtil.readField;
  *
  * @author f0rb on 2024/7/16
  */
-@AllArgsConstructor
+@Slf4j
 public class LeafConditionNode implements ConditionNode {
 
-    private String fieldName;
-    private Predicate<Object> predicate;
+    private final String fieldName;
+    private final Predicate<Object> predicate;
+    private final QuerySuffix querySuffix;
+    private final Object rightValue;
 
-    public LeafConditionNode(Field field, Object value) {
-        String queryFieldName = field.getName();
-        QuerySuffix querySuffix = resolve(queryFieldName);
+    public LeafConditionNode(String queryFieldName, Object rv) {
+        this.querySuffix = resolve(queryFieldName);
         this.fieldName = querySuffix.resolveColumnName(queryFieldName);
+        this.rightValue = rv;
         Matcher matcher = FilterExecutor.get(querySuffix);
-        this.predicate = entityFieldValue -> matcher.match(value, entityFieldValue);
+        this.predicate = entityFieldValue -> matcher.match(this.rightValue, entityFieldValue);
     }
 
     @Override
     public boolean test(Object entity) {
         Object entityFieldValue = readField(entity, fieldName);
-        return predicate.test(entityFieldValue);
+        boolean result = predicate.test(entityFieldValue);
+        log.debug("Field name [{}], predicate [{} {} {}]: {}", fieldName,  entityFieldValue,querySuffix, rightValue, result);
+        return result;
     }
 }
