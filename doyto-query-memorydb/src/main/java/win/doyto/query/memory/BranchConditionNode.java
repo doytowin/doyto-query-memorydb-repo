@@ -33,19 +33,39 @@ import static win.doyto.query.util.CommonUtil.readField;
 @Getter
 public class BranchConditionNode implements ConditionNode {
 
-    Predicate<Object> predicate = t -> true;
+    private Predicate<Object> predicate;
 
     /**
-     * 根据Query对象为各个字段确定筛选条件
+     * Construct a branch node of a screening decision tree
      *
-     * @param query Query object
+     * @param target The object corresponding to the branch node
      */
-    public BranchConditionNode(Object query) {
-        for (Field field : query.getClass().getDeclaredFields()) {
+    public BranchConditionNode(Object target) {
+        this(target, true);
+    }
+
+    /**
+     * Construct a AND/OR branch node of a screening decision tree
+     *
+     * @param target The object corresponding to the branch node
+     * @param and true to an AND node, false to an OR node
+     */
+    public BranchConditionNode(Object target, boolean and) {
+        predicate = and ? t -> true : t -> false;
+        for (Field field : target.getClass().getDeclaredFields()) {
             if (ColumnUtil.shouldRetain(field)) {
-                Object value = readField(field, query);
+                Object value = readField(field, target);
                 if (isValidValue(value, field)) {
-                    predicate = predicate.and(new LeafConditionNode(field, value));
+                    if (field.getName().endsWith("Or")) {
+                        predicate = predicate.and(new BranchConditionNode(value, false));
+                    } else {
+                        LeafConditionNode other = new LeafConditionNode(field, value);
+                        if (and) {
+                            predicate = predicate.and(other);
+                        } else {
+                            predicate = predicate.or(other);
+                        }
+                    }
                 }
             }
         }

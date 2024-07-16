@@ -18,6 +18,7 @@ package win.doyto.query.memory;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import win.doyto.query.test.Account;
 import win.doyto.query.test.TestEntity;
 import win.doyto.query.test.TestEnum;
 import win.doyto.query.test.TestQuery;
@@ -181,4 +182,11 @@ class MemoryDataAccessTest {
         assertThat(testMemoryDataAccess.get(1).getMemo()).isNotEqualTo("New Memo");
     }
 
+    @Test
+    void supportSuffixOrWithCustomType() {
+        Account accountOr = Account.builder().username("f0rb").email("f0rb").build();
+        TestQuery testQuery = TestQuery.builder().accountOr(accountOr).build();
+        List<TestEntity> entities = testMemoryDataAccess.query(testQuery);
+        assertThat(entities).hasSize(1);
+    }
 }
