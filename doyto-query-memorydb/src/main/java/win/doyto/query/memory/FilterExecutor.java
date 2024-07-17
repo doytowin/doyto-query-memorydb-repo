@@ -41,7 +41,11 @@ class FilterExecutor {
         map.put(Like, new LikeMatcher());
         map.put(NotLike, new NotLikeMatcher());
         map.put(Start, new StartMatcher());
+        map.put(End, new EndMatcher());
         map.put(Contain, new LikeMatcher());
+        map.put(NotStart, new NotStartMatcher());
+        map.put(NotEnd, new NotEndMatcher());
+        map.put(NotContain, new NotLikeMatcher());
         map.put(Null, new NullMatcher());
         map.put(In, (efv, qfv) -> ((Collection<?>) qfv).contains(efv));
         map.put(NotIn, (efv, qfv) -> !((Collection<?>) qfv).contains(efv));
@@ -80,6 +84,27 @@ class FilterExecutor {
         @Override
         public boolean doMatch(Object efv, Object qfv) {
             return StringUtils.startsWith(efv.toString(), qfv.toString());
+        }
+    }
+
+    static class NotStartMatcher extends LikeMatcher {
+        @Override
+        public boolean doMatch(Object efv, Object qfv) {
+            return !StringUtils.startsWith(efv.toString(), qfv.toString());
+        }
+    }
+
+    static class EndMatcher extends LikeMatcher {
+        @Override
+        public boolean doMatch(Object efv, Object qfv) {
+            return StringUtils.endsWith(efv.toString(), qfv.toString());
+        }
+    }
+
+    static class NotEndMatcher extends LikeMatcher {
+        @Override
+        public boolean doMatch(Object efv, Object qfv) {
+            return !StringUtils.endsWith(efv.toString(), qfv.toString());
         }
     }
 
