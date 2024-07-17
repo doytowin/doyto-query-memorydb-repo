@@ -50,6 +50,7 @@ class FilterExecutor {
         map.put(Ge, (efv, qfv) -> ((Comparable<Object>) efv).compareTo(qfv) >= 0);
         map.put(Le, (efv, qfv) -> ((Comparable<Object>) efv).compareTo(qfv) <= 0);
         map.put(Not, (efv, qfv) -> !efv.equals(qfv));
+        map.put(Ne, (efv, qfv) -> !efv.equals(qfv));
     }
 
     static Matcher get(QuerySuffix querySuffix) {
