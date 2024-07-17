@@ -103,6 +103,15 @@ class MemoryDataAccessTest {
     }
 
     @Test
+    void deleteById() {
+        int cnt = testMemoryDataAccess.delete(1);
+        assertThat(cnt).isEqualTo(1);
+
+        cnt = testMemoryDataAccess.delete(1);
+        assertThat(cnt).isZero();
+    }
+
+    @Test
     void sort() {
         TestQuery sort = TestQuery.builder().build();
         sort.setSort("id,desc");
