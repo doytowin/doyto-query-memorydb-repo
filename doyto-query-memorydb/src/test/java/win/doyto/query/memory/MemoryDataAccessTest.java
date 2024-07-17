@@ -85,6 +85,14 @@ class MemoryDataAccessTest {
     }
 
     @Test
+    void queryIds() {
+        TestQuery testQuery = TestQuery.builder().build();
+        List<Integer> idList = testMemoryDataAccess.queryIds(testQuery);
+        assertThat(idList).hasSize(5)
+                .containsExactly(1, 2, 3, 4, 5);
+    }
+
+    @Test
     void patch() {
         TestEntity testEntity = new TestEntity();
         testEntity.setMemo("invalid");
