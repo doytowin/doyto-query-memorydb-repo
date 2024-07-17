@@ -35,16 +35,16 @@ import static win.doyto.query.util.CommonUtil.readField;
 @Getter
 public class BranchConditionNode implements ConditionNode {
 
-    private Predicate<Object> predicate;
+    private Predicate<Object> delegate;
     private int count;
 
     BranchConditionNode(Predicate<Object> predicate, int count) {
-        this.predicate = predicate;
+        this.delegate = predicate;
         this.count = count;
     }
 
     /**
-     * Construct a branch node of a screening decision tree
+     * Construct a branch node of a filter tree
      *
      * @param target The object corresponding to the branch node
      */
@@ -53,48 +53,48 @@ public class BranchConditionNode implements ConditionNode {
     }
 
     /**
-     * Construct a AND/OR branch node of a screening decision tree
+     * Construct a AND/OR branch node of a filter tree
      *
      * @param target The object corresponding to the branch node
      * @param and    true to an AND node, false to an OR node
      */
     public BranchConditionNode(Object target, boolean and) {
-        predicate = and ? t -> true : t -> false;
-        for (Field field : target.getClass().getDeclaredFields()) {
-            if (ColumnUtil.shouldRetain(field)) {
-                Object value = readField(field, target);
-                if (isValidValue(value, field)) {
-                    if (field.getName().endsWith("Or")) {
-                        BranchConditionNode orNode;
-                        if (Collection.class.isAssignableFrom(field.getType()) && value instanceof Collection<?> list) {
-                            String fieldName = StringUtils.remove(field.getName(), "Or");
-                            Predicate<Object> leaf = t -> false;
-                            for (Object rv : list) {
-                                leaf = leaf.or(new LeafConditionNode(fieldName, rv));
-                            }
-                            orNode = new BranchConditionNode(leaf, list.size());
-                        } else {
-                            orNode = new BranchConditionNode(value, false);
-                        }
-                        if (orNode.count > 0) {
-                            predicate = predicate.and(orNode);
-                        }
-                    } else {
-                        LeafConditionNode leafNode = new LeafConditionNode(field.getName(), value);
-                        if (and) {
-                            predicate = predicate.and(leafNode);
-                        } else {
-                            predicate = predicate.or(leafNode);
-                        }
-                        count++;
-                    }
-                }
+        delegate = and ? t -> true : t -> false;
+        Field[] fields = ColumnUtil.queryFields(target.getClass());
+        for (Field field : fields) {
+            Object value = readField(field, target);
+            if (isValidValue(value, field)) {
+                addChild(and, field, value);
             }
+        }
+    }
+
+    private void addChild(boolean and, Field queryField, Object queryFieldValue) {
+        String queryFieldName = queryField.getName();
+        if (queryFieldName.endsWith("Or")) {
+            BranchConditionNode orNode;
+            if (Collection.class.isAssignableFrom(queryField.getType()) && queryFieldValue instanceof Collection<?> list) {
+                queryFieldName = StringUtils.remove(queryFieldName, "Or");
+                Predicate<Object> leaf = t -> false;
+                for (Object qfv : list) {
+                    leaf = leaf.or(new LeafConditionNode(queryFieldName, qfv));
+                }
+                orNode = new BranchConditionNode(leaf, list.size());
+            } else {
+                orNode = new BranchConditionNode(queryFieldValue, false);
+            }
+            if (orNode.count > 0) {
+                delegate = delegate.and(orNode);
+            }
+        } else {
+            LeafConditionNode leafNode = new LeafConditionNode(queryFieldName, queryFieldValue);
+            delegate = and ? delegate.and(leafNode) : delegate.or(leafNode);
+            count++;
         }
     }
 
     @Override
     public boolean test(Object entity) {
-        return predicate.test(entity);
+        return delegate.test(entity);
     }
 }

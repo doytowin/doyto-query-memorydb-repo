@@ -26,19 +26,19 @@ import java.util.Collection;
 interface Matcher {
 
     /**
-     * 实体对象筛选
+     * Filter entity objects by comparing qv and ev
      *
-     * @param qv 查询对象字段值
-     * @param ev 实体对象字段值
-     * @return true 符合过滤条件
+     * @param efv The field value of the entity object
+     * @param qfv The field value of the query object
+     * @return true The field value matches the filter criteria
      */
-    boolean doMatch(Object qv, Object ev);
+    boolean doMatch(Object efv, Object qfv);
 
-    default boolean match(Object qv, Object ev) {
-        return isComparable(qv, ev) && doMatch(qv, ev);
+    default boolean match(Object efv, Object qfv) {
+        return isComparable(efv, qfv) && doMatch(efv, qfv);
     }
 
-    default boolean isComparable(Object qv, Object ev) {
-        return qv instanceof Collection || (qv instanceof Comparable && ev instanceof Comparable);
+    default boolean isComparable(Object efv, Object qfv) {
+        return qfv instanceof Collection || (qfv instanceof Comparable && efv instanceof Comparable);
     }
 }

@@ -41,62 +41,55 @@ class FilterExecutor {
         map.put(Like, new LikeMatcher());
         map.put(NotLike, new NotLikeMatcher());
         map.put(Start, new StartMatcher());
-        map.put(Contain, new ContainMatcher());
+        map.put(Contain, new LikeMatcher());
         map.put(Null, new NullMatcher());
-        map.put(In, (qv, ev) -> ((Collection<?>) qv).contains(ev));
-        map.put(NotIn, (qv, ev) -> !((Collection<?>) qv).contains(ev));
-        map.put(Gt, (qv, ev) -> ((Comparable<Object>) ev).compareTo(qv) > 0);
-        map.put(Lt, (qv, ev) -> ((Comparable<Object>) ev).compareTo(qv) < 0);
-        map.put(Ge, (qv, ev) -> ((Comparable<Object>) ev).compareTo(qv) >= 0);
-        map.put(Le, (qv, ev) -> ((Comparable<Object>) ev).compareTo(qv) <= 0);
-        map.put(Not, (qv, ev) -> !qv.equals(ev));
+        map.put(In, (efv, qfv) -> ((Collection<?>) qfv).contains(efv));
+        map.put(NotIn, (efv, qfv) -> !((Collection<?>) qfv).contains(efv));
+        map.put(Gt, (efv, qfv) -> ((Comparable<Object>) efv).compareTo(qfv) > 0);
+        map.put(Lt, (efv, qfv) -> ((Comparable<Object>) efv).compareTo(qfv) < 0);
+        map.put(Ge, (efv, qfv) -> ((Comparable<Object>) efv).compareTo(qfv) >= 0);
+        map.put(Le, (efv, qfv) -> ((Comparable<Object>) efv).compareTo(qfv) <= 0);
+        map.put(Not, (efv, qfv) -> !efv.equals(qfv));
     }
 
     static Matcher get(QuerySuffix querySuffix) {
-        return map.getOrDefault(querySuffix, Object::equals);
+        return map.getOrDefault(querySuffix, (obj, o) -> o.equals(obj));
     }
 
     static class LikeMatcher implements Matcher {
         @Override
-        public boolean doMatch(Object qv, Object ev) {
-            return StringUtils.contains(ev.toString(), qv.toString());
+        public boolean doMatch(Object efv, Object qfv) {
+            return StringUtils.contains(efv.toString(), qfv.toString());
         }
 
         @Override
-        public boolean isComparable(Object qv, Object ev) {
-            return ev instanceof String;
+        public boolean isComparable(Object efv, Object qfv) {
+            return efv instanceof String;
         }
     }
 
     static class NotLikeMatcher extends LikeMatcher {
         @Override
-        public boolean doMatch(Object qv, Object ev) {
-            return !super.doMatch(qv, ev);
+        public boolean doMatch(Object efv, Object qfv) {
+            return !super.doMatch(efv, qfv);
         }
     }
 
     static class StartMatcher extends LikeMatcher {
         @Override
-        public boolean doMatch(Object qv, Object ev) {
-            return StringUtils.startsWith(ev.toString(), qv.toString());
-        }
-    }
-
-    static class ContainMatcher extends LikeMatcher {
-        @Override
-        public boolean doMatch(Object qv, Object ev) {
-            return StringUtils.contains(ev.toString(), qv.toString());
+        public boolean doMatch(Object efv, Object qfv) {
+            return StringUtils.startsWith(efv.toString(), qfv.toString());
         }
     }
 
     static class NullMatcher implements Matcher {
         @Override
-        public boolean doMatch(Object qv, Object ev) {
-            return Boolean.TRUE.equals(qv) == (ev == null);
+        public boolean doMatch(Object efv, Object qfv) {
+            return Boolean.TRUE.equals(qfv) == (efv == null);
         }
 
         @Override
-        public boolean isComparable(Object qv, Object ev) {
+        public boolean isComparable(Object efv, Object qfv) {
             return true;
         }
     }
