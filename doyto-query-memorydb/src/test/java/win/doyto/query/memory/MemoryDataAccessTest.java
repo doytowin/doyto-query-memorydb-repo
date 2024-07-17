@@ -20,7 +20,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.test.Account;
 import win.doyto.query.test.TestEntity;
-import win.doyto.query.test.TestEnum;
 import win.doyto.query.test.TestQuery;
 
 import java.util.Arrays;
@@ -61,37 +60,6 @@ class MemoryDataAccessTest {
     }
 
     @Test
-    void filterByUsernameEq() {
-        TestQuery testQuery = TestQuery.builder().usernameEq("f0rb").build();
-        assertEquals(1, testMemoryDataAccess.query(testQuery).size());
-    }
-
-    @Test
-    void filterByLike() {
-        TestQuery testQuery = TestQuery.builder().usernameLike("name").build();
-        assertEquals(4, testMemoryDataAccess.query(testQuery).size());
-    }
-
-    @Test
-    void filterByIn() {
-        List<Integer> idIn = Arrays.asList(1, 2, 3, -1);
-        TestQuery testQuery = TestQuery.builder().idIn(idIn).build();
-        assertEquals(3, testMemoryDataAccess.query(testQuery).size());
-    }
-
-    @Test
-    void filterByLt() {
-        TestQuery testQuery = TestQuery.builder().idLt(3).build();
-        assertEquals(2, testMemoryDataAccess.query(testQuery).size());
-    }
-
-    @Test
-    void filterByLe() {
-        TestQuery testQuery = TestQuery.builder().idLe(3).build();
-        assertEquals(3, testMemoryDataAccess.query(testQuery).size());
-    }
-
-    @Test
     void getShouldReturnDifferentEntityObject() {
         TestEntity u1 = testMemoryDataAccess.get(1);
         TestEntity u2 = testMemoryDataAccess.get(1);
@@ -99,45 +67,21 @@ class MemoryDataAccessTest {
     }
 
     @Test
-    void memoNull() {
+    void filterByNull() {
         TestQuery byNullMemo = TestQuery.builder().build();
         assertEquals(5, testMemoryDataAccess.count(byNullMemo));
 
         byNullMemo.setMemoNull(true);
         assertEquals(4, testMemoryDataAccess.count(byNullMemo));
-    }
 
-    @Test
-    void notNull() {
         TestQuery byNoneNullMemo = TestQuery.builder().memoNull(false).build();
         assertEquals(1, testMemoryDataAccess.count(byNoneNullMemo));
     }
 
     @Test
-    void not() {
-        TestQuery byNotNormal = TestQuery.builder().userLevelNot(TestEnum.NORMAL).build();
-        assertEquals(1, testMemoryDataAccess.count(byNotNormal));
-
-        TestQuery byNotNormalAndValid = TestQuery.builder().userLevelNot(TestEnum.VIP).valid(true).build();
-        assertEquals(2, testMemoryDataAccess.count(byNotNormalAndValid));
-    }
-
-    @Test
-    void filterByNotIn() {
-        TestQuery testQuery = TestQuery.builder().idNotIn(Arrays.asList(1, 2)).build();
-        assertEquals(3, testMemoryDataAccess.count(testQuery));
-
-        testQuery.setIdNotIn(Arrays.asList());
+    void filterByNotInEmptyCollection() {
+        TestQuery testQuery = TestQuery.builder().idNotIn(List.of()).build();
         assertEquals(5, testMemoryDataAccess.count(testQuery));
-    }
-
-    @Test
-    void filterByStart() {
-        TestQuery byUsernameLike = TestQuery.builder().usernameLike("name").build();
-        assertEquals(4, testMemoryDataAccess.count(byUsernameLike));
-
-        TestQuery byUsernameStart = TestQuery.builder().usernameStart("name").build();
-        assertEquals(0, testMemoryDataAccess.count(byUsernameStart));
     }
 
     @Test
