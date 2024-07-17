@@ -64,33 +64,38 @@ public class BranchConditionNode implements ConditionNode {
         for (Field field : fields) {
             Object value = readField(field, target);
             if (isValidValue(value, field)) {
-                addChild(and, field, value);
+                ConditionNode child = buildChild(field, value);
+                if (!(child instanceof BranchConditionNode branchNode) || branchNode.count > 0) {
+                    // add when child is leaf node or non-empty branch node
+                    delegate = and ? delegate.and(child) : delegate.or(child);
+                    count++;
+                }
             }
         }
     }
 
-    private void addChild(boolean and, Field queryField, Object queryFieldValue) {
-        String queryFieldName = queryField.getName();
-        if (queryFieldName.endsWith("Or")) {
-            BranchConditionNode orNode;
-            if (Collection.class.isAssignableFrom(queryField.getType()) && queryFieldValue instanceof Collection<?> list) {
-                queryFieldName = StringUtils.remove(queryFieldName, "Or");
-                Predicate<Object> leaf = t -> false;
-                for (Object qfv : list) {
-                    leaf = leaf.or(new LeafConditionNode(queryFieldName, qfv));
-                }
-                orNode = new BranchConditionNode(leaf, list.size());
+    private static ConditionNode buildChild(Field queryField, Object queryFieldValue) {
+        ConditionNode child;
+        if (queryField.getName().endsWith("Or")) {
+            if (Collection.class.isAssignableFrom(queryField.getType())
+                    && queryFieldValue instanceof Collection<?> list) {
+                String queryFieldName = StringUtils.remove(queryField.getName(), "Or");
+                child = buildBranchNodeForListWithBasicType(list, queryFieldName);
             } else {
-                orNode = new BranchConditionNode(queryFieldValue, false);
-            }
-            if (orNode.count > 0) {
-                delegate = delegate.and(orNode);
+                child = new BranchConditionNode(queryFieldValue, false);
             }
         } else {
-            LeafConditionNode leafNode = new LeafConditionNode(queryFieldName, queryFieldValue);
-            delegate = and ? delegate.and(leafNode) : delegate.or(leafNode);
-            count++;
+            child = new LeafConditionNode(queryField.getName(), queryFieldValue);
         }
+        return child;
+    }
+
+    private static BranchConditionNode buildBranchNodeForListWithBasicType(Collection<?> list, String queryFieldName) {
+        Predicate<Object> leaf = t -> false;
+        for (Object qfv : list) {
+            leaf = leaf.or(new LeafConditionNode(queryFieldName, qfv));
+        }
+        return new BranchConditionNode(leaf, list.size());
     }
 
     @Override
