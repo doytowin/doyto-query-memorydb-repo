@@ -112,6 +112,13 @@ class MemoryDataAccessTest {
     }
 
     @Test
+    void deleteByQuery() {
+        TestQuery testQuery = TestQuery.builder().usernameContain("user").build();
+        int cnt = testMemoryDataAccess.delete(testQuery);
+        assertThat(cnt).isEqualTo(4);
+    }
+
+    @Test
     void sort() {
         TestQuery sort = TestQuery.builder().build();
         sort.setSort("id,desc");
