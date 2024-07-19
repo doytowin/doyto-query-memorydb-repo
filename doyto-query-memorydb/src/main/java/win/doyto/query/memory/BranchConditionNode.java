@@ -18,7 +18,9 @@ package win.doyto.query.memory;
 
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import win.doyto.query.core.Query;
 import win.doyto.query.util.ColumnUtil;
+import win.doyto.query.util.CommonUtil;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -79,8 +81,13 @@ public class BranchConditionNode implements ConditionNode {
         if (queryField.getName().endsWith("Or")) {
             if (Collection.class.isAssignableFrom(queryField.getType())
                     && queryFieldValue instanceof Collection<?> list) {
-                String queryFieldName = StringUtils.remove(queryField.getName(), "Or");
-                child = buildBranchNodeForListWithBasicType(list, queryFieldName);
+                Class<?> clazz = CommonUtil.resolveActualReturnClass(queryField);
+                if (Query.class.isAssignableFrom(clazz)) {
+                    child = buildOrBranchNodeForListWithCustomType(list);
+                } else {
+                    String queryFieldName = StringUtils.remove(queryField.getName(), "Or");
+                    child = buildOrBranchNodeForListWithBasicType(list, queryFieldName);
+                }
             } else {
                 child = new BranchConditionNode(queryFieldValue, false);
             }
@@ -90,7 +97,15 @@ public class BranchConditionNode implements ConditionNode {
         return child;
     }
 
-    private static BranchConditionNode buildBranchNodeForListWithBasicType(Collection<?> list, String queryFieldName) {
+    private static ConditionNode buildOrBranchNodeForListWithCustomType(Collection<?> list) {
+        Predicate<Object> branch = t -> false;
+        for (Object qfv : list) {
+            branch = branch.or(new BranchConditionNode(qfv));
+        }
+        return new BranchConditionNode(branch, list.size());
+    }
+
+    private static BranchConditionNode buildOrBranchNodeForListWithBasicType(Collection<?> list, String queryFieldName) {
         Predicate<Object> leaf = t -> false;
         for (Object qfv : list) {
             leaf = leaf.or(new LeafConditionNode(queryFieldName, qfv));

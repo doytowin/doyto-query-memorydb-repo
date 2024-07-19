@@ -172,4 +172,14 @@ class MemoryDataAccessTest {
         List<TestEntity> entities = testMemoryDataAccess.query(testQuery);
         assertThat(entities).hasSize(2);
     }
+
+    @Test
+    void supportSuffixOrWithCollectionWithCustomType() {
+        Account account1 = Account.builder().username("username1").email("test1@163.com").build();
+        Account account2 = Account.builder().email("test4@163.com").build();
+
+        TestQuery testQuery = TestQuery.builder().accountsOr(Arrays.asList(account1, account2)).build();
+        List<TestEntity> entities = testMemoryDataAccess.query(testQuery);
+        assertThat(entities).hasSize(2);
+    }
 }
