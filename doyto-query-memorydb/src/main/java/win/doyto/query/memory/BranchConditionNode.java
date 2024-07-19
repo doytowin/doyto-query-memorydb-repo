@@ -35,12 +35,12 @@ import static win.doyto.query.util.CommonUtil.readField;
  * @author f0rb on 2024/7/16
  */
 @Getter
-public class BranchConditionNode implements ConditionNode {
+public class BranchConditionNode<E> implements ConditionNode<E> {
 
-    private Predicate<Object> delegate;
+    private Predicate<E> delegate;
     private int count;
 
-    BranchConditionNode(Predicate<Object> predicate, int count) {
+    BranchConditionNode(Predicate<E> predicate, int count) {
         this.delegate = predicate;
         this.count = count;
     }
@@ -66,8 +66,8 @@ public class BranchConditionNode implements ConditionNode {
         for (Field field : fields) {
             Object value = readField(field, target);
             if (isValidValue(value, field)) {
-                ConditionNode child = buildChild(field, value);
-                if (!(child instanceof BranchConditionNode branchNode) || branchNode.count > 0) {
+                ConditionNode<E> child = buildChild(field, value);
+                if (!(child instanceof BranchConditionNode<?> branchNode) || branchNode.count > 0) {
                     // add when child is leaf node or non-empty branch node
                     delegate = and ? delegate.and(child) : delegate.or(child);
                     count++;
@@ -76,8 +76,8 @@ public class BranchConditionNode implements ConditionNode {
         }
     }
 
-    private static ConditionNode buildChild(Field queryField, Object queryFieldValue) {
-        ConditionNode child;
+    private static <T> ConditionNode<T> buildChild(Field queryField, Object queryFieldValue) {
+        ConditionNode<T> child;
         if (queryField.getName().endsWith("Or")) {
             if (Collection.class.isAssignableFrom(queryField.getType())
                     && queryFieldValue instanceof Collection<?> list) {
@@ -89,32 +89,32 @@ public class BranchConditionNode implements ConditionNode {
                     child = buildOrBranchNodeForListWithBasicType(list, queryFieldName);
                 }
             } else {
-                child = new BranchConditionNode(queryFieldValue, false);
+                child = new BranchConditionNode<>(queryFieldValue, false);
             }
         } else {
-            child = new LeafConditionNode(queryField.getName(), queryFieldValue);
+            child = new LeafConditionNode<>(queryField.getName(), queryFieldValue);
         }
         return child;
     }
 
-    private static ConditionNode buildOrBranchNodeForListWithCustomType(Collection<?> list) {
-        Predicate<Object> branch = t -> false;
+    private static <T> ConditionNode<T> buildOrBranchNodeForListWithCustomType(Collection<?> list) {
+        Predicate<T> branch = t -> false;
         for (Object qfv : list) {
-            branch = branch.or(new BranchConditionNode(qfv));
+            branch = branch.or(new BranchConditionNode<>(qfv));
         }
-        return new BranchConditionNode(branch, list.size());
+        return new BranchConditionNode<>(branch, list.size());
     }
 
-    private static BranchConditionNode buildOrBranchNodeForListWithBasicType(Collection<?> list, String queryFieldName) {
-        Predicate<Object> leaf = t -> false;
+    private static <T> BranchConditionNode<T> buildOrBranchNodeForListWithBasicType(Collection<?> list, String queryFieldName) {
+        Predicate<T> leaf = t -> false;
         for (Object qfv : list) {
-            leaf = leaf.or(new LeafConditionNode(queryFieldName, qfv));
+            leaf = leaf.or(new LeafConditionNode<>(queryFieldName, qfv));
         }
-        return new BranchConditionNode(leaf, list.size());
+        return new BranchConditionNode<>(leaf, list.size());
     }
 
     @Override
-    public boolean test(Object entity) {
+    public boolean test(E entity) {
         return delegate.test(entity);
     }
 }

@@ -23,7 +23,7 @@ import java.util.function.Predicate;
  *
  * @author f0rb on 2024/7/16
  */
-public interface ConditionNode extends Predicate<Object> {
+public interface ConditionNode<E> extends Predicate<E> {
     @Override
-    boolean test(Object entity);
+    boolean test(E entity);
 }

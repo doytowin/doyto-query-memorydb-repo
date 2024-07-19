@@ -30,7 +30,7 @@ import static win.doyto.query.util.CommonUtil.readField;
  * @author f0rb on 2024/7/16
  */
 @Slf4j
-public class LeafConditionNode implements ConditionNode {
+public class LeafConditionNode<E> implements ConditionNode<E> {
 
     private final String entityFieldName;
     private final Predicate<Object> delegate;
@@ -46,7 +46,7 @@ public class LeafConditionNode implements ConditionNode {
     }
 
     @Override
-    public boolean test(Object entity) {
+    public boolean test(E entity) {
         Object entityFieldValue = readField(entity, entityFieldName);
         boolean result = delegate.test(entityFieldValue);
         log.debug("Filtering for [{}.{}]: ({} {} {}) -> {}", entity.getClass().getSimpleName(),

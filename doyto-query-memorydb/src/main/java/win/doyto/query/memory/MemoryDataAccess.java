@@ -154,7 +154,7 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
 
     @Override
     public List<E> query(Q query) {
-        BranchConditionNode root = new BranchConditionNode(query);
+        BranchConditionNode<E> root = new BranchConditionNode<>(query);
         Stream<E> stream = entitiesMap.values().stream().filter(root);
 
         if (query.getSort() != null) {
@@ -215,7 +215,7 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
 
     @Override
     public long count(Q query) {
-        BranchConditionNode root = new BranchConditionNode(query);
+        BranchConditionNode<E> root = new BranchConditionNode<>(query);
         return entitiesMap.values().stream().filter(root).count();
     }
 
