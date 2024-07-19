@@ -32,7 +32,6 @@ import win.doyto.query.util.ColumnUtil;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -173,17 +172,29 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
     }
 
     @Override
+    @SuppressWarnings("java:S112")
     public <V> List<V> queryColumns(Q q, Class<V> classV, String... columns) {
         List<E> entities = query(q);
-        List<V> objects = new ArrayList<>(entities.size());
         if (columns.length == 1) {
             return entities.stream().map(entity -> (V) readField(entity, columns[0])).toList();
         } else {
-            for (E e : entities) {
-                objects.add(BeanUtil.convertTo(e, classV));
-            }
+            return entities.stream().map(entity -> {
+                try {
+                    V view = classV.getConstructor().newInstance();
+                    for (String column : columns) {
+                        Field field = getField(entity, column);
+                        if (field != null) {
+                            Object value = readField(field, entity);
+                            writeField(field, view, value);
+                        }
+                    }
+                    return view;
+                } catch (Exception e) {
+                    log.error("Failed to convert for {}[{}]:", entity.getClass().getSimpleName(), entity.getId(), e);
+                    throw new RuntimeException(e);
+                }
+            }).toList();
         }
-        return objects;
     }
 
     protected Stream<E> doSort(Stream<E> stream, String sort) {

@@ -16,6 +16,7 @@
 
 package win.doyto.query.memory;
 
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.test.Account;
@@ -90,6 +91,22 @@ class MemoryDataAccessTest {
         List<Integer> idList = testMemoryDataAccess.queryIds(testQuery);
         assertThat(idList).hasSize(5)
                 .containsExactly(1, 2, 3, 4, 5);
+    }
+
+    @Test
+    void queryColumns() {
+        TestQuery testQuery = TestQuery.builder().build();
+        List<TestEntity> entities = testMemoryDataAccess.queryColumns(testQuery,
+                TestEntity.class, "id", "username", "pass");
+        assertThat(entities).hasSize(5)
+                .extracting("id", "username", "password")
+                .containsExactly(
+                        Tuple.tuple(1, "username1", null),
+                        Tuple.tuple(2, "username2", null),
+                        Tuple.tuple(3, "username3", null),
+                        Tuple.tuple(4, "username4", null),
+                        Tuple.tuple(5, "f0rb", null)
+                );
     }
 
     @Test
