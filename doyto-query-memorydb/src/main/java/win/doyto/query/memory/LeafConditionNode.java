@@ -41,8 +41,7 @@ public class LeafConditionNode<E> implements ConditionNode<E> {
         this.querySuffix = resolve(queryFieldName);
         this.entityFieldName = querySuffix.resolveColumnName(queryFieldName);
         this.qfv = queryFieldValue;
-        Matcher matcher = FilterExecutor.get(querySuffix);
-        this.delegate = efv -> matcher.match(efv, this.qfv);
+        this.delegate = FilterExecutor.build(querySuffix, qfv);
     }
 
     @Override

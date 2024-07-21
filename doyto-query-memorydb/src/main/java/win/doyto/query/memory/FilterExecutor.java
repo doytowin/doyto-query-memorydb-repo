@@ -23,6 +23,8 @@ import win.doyto.query.core.QuerySuffix;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import static win.doyto.query.core.QuerySuffix.*;
 
@@ -59,6 +61,15 @@ class FilterExecutor {
 
     static Matcher get(QuerySuffix querySuffix) {
         return map.getOrDefault(querySuffix, (obj, o) -> o.equals(obj));
+    }
+
+    static Predicate<Object> build(QuerySuffix querySuffix, Object qfv) {
+        if (querySuffix == Rx) {
+            Pattern p = Pattern.compile((String) qfv);
+            return efv -> efv instanceof String text && p.matcher(text).find();
+        }
+        Matcher matcher = get(querySuffix);
+        return efv -> matcher.match(efv, qfv);
     }
 
     static class LikeMatcher implements Matcher {
