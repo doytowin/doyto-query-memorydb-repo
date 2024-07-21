@@ -7,7 +7,8 @@ DoytoQueryMemoryDB - A Java Embedded Object-Oriented Database
 ------
 
 The `DoytoQueryMemoryDB` project is derived from `doyto-query-memory` which works as a mock for TDD in database access development.
-Now it is seperated from `DoytoQuery` project and aiming to be an embedded relational database without query language.
+Now it is seperated from `DoytoQuery` project and aiming to be an embedded object-oriented database without query
+language.
 
 License
 -------
