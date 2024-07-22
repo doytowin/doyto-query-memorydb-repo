@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static win.doyto.query.util.CommonUtil.*;
@@ -51,11 +52,12 @@ import static win.doyto.query.util.CommonUtil.*;
 public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, Q extends DoytoQuery> implements DataAccess<E, I, Q> {
     protected static final Map<Class<?>, Map<?, ?>> tableMap = new ConcurrentHashMap<>();
 
-    protected final Map<I, E> entitiesMap = new ConcurrentHashMap<>();
+    protected final Map<I, DataWrapper<E>> entitiesMap = new ConcurrentHashMap<>();
     private final AtomicLong idGenerator = new AtomicLong(0);
     private final List<Field> fields;
     private final Field idField;
     private final Class<I> idClass;
+    private final Function<E, DataWrapper<E>> createDataWrapperFunc = SimpleDataWrapper::new;
 
     public MemoryDataAccess(Class<E> entityClass) {
         tableMap.put(entityClass, entitiesMap);
@@ -90,7 +92,8 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
 
     @Override
     public E get(IdWrapper<I> idWrapper) {
-        return SerializationUtils.clone(entitiesMap.get(idWrapper.getId()));
+        DataWrapper<E> wrapper = entitiesMap.getOrDefault(idWrapper.getId(), DataWrapper.empty());
+        return SerializationUtils.clone(wrapper.get());
     }
 
     @Override
@@ -103,7 +106,7 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         if (idField != null) {
             generateNewId(e);
         }
-        entitiesMap.put(e.getId(), e);
+        entitiesMap.put(e.getId(), createDataWrapperFunc.apply(e));
     }
 
     @Override
@@ -111,17 +114,18 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         if (!entitiesMap.containsKey(e.getId())) {
             return 0;
         }
-        entitiesMap.put(e.getId(), e);
+        entitiesMap.put(e.getId(), createDataWrapperFunc.apply(e));
         return 1;
     }
 
     @Override
     public int patch(E patch) {
-        E origin = entitiesMap.get(patch.getId());
-        if (origin == null) {
+        DataWrapper<E> dataWrapper = entitiesMap.get(patch.getId());
+        if (dataWrapper == null) {
             return 0;
         }
 
+        E origin = dataWrapper.get();
         for (Field field : fields) {
             Object value = readField(field, patch);
             if (value != null) {
@@ -173,7 +177,7 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
 
     private Stream<E> filter(Q query) {
         BranchConditionNode<E> root = new BranchConditionNode<>(query);
-        return entitiesMap.values().stream().filter(root);
+        return entitiesMap.values().stream().map(DataWrapper::get).filter(root);
     }
 
     public PageList<E> page(Q query) {
