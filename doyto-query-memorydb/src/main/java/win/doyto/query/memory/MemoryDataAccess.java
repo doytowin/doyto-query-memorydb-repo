@@ -26,6 +26,7 @@ import win.doyto.query.config.GlobalConfiguration;
 import win.doyto.query.core.DataAccess;
 import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.core.IdWrapper;
+import win.doyto.query.core.PageList;
 import win.doyto.query.entity.Persistable;
 import win.doyto.query.util.BeanUtil;
 import win.doyto.query.util.ColumnUtil;
@@ -154,8 +155,7 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
 
     @Override
     public List<E> query(Q query) {
-        BranchConditionNode<E> root = new BranchConditionNode<>(query);
-        Stream<E> stream = entitiesMap.values().stream().filter(root);
+        Stream<E> stream = filter(query);
 
         if (query.getSort() != null) {
             stream = doSort(stream, query.getSort());
@@ -164,6 +164,30 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
             stream = truncateByPaging(stream, query);
         }
         return stream.map(SerializationUtils::clone).toList();
+    }
+
+    @Override
+    public long count(Q query) {
+        return filter(query).count();
+    }
+
+    private Stream<E> filter(Q query) {
+        BranchConditionNode<E> root = new BranchConditionNode<>(query);
+        return entitiesMap.values().stream().filter(root);
+    }
+
+    public PageList<E> page(Q query) {
+        List<E> list = filter(query).toList();
+        long count = list.size();
+        Stream<E> stream = list.stream();
+
+        if (query.getSort() != null) {
+            stream = doSort(stream, query.getSort());
+        }
+        if (query.needPaging()) {
+            stream = truncateByPaging(stream, query);
+        }
+        return new PageList<>(stream.map(SerializationUtils::clone).toList(), count);
     }
 
     private Stream<E> truncateByPaging(Stream<E> stream, Q query) {
@@ -212,11 +236,4 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         }
         return stream;
     }
-
-    @Override
-    public long count(Q query) {
-        BranchConditionNode<E> root = new BranchConditionNode<>(query);
-        return entitiesMap.values().stream().filter(root).count();
-    }
-
 }

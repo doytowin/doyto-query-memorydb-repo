@@ -19,6 +19,7 @@ package win.doyto.query.memory;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import win.doyto.query.core.PageList;
 import win.doyto.query.test.Account;
 import win.doyto.query.test.TestEntity;
 import win.doyto.query.test.TestQuery;
@@ -46,9 +47,11 @@ class MemoryDataAccessTest {
     }
 
     @Test
-    void paging() {
+    void page() {
         TestQuery testQuery = TestQuery.builder().pageNumber(2).pageSize(2).build();
-        List<TestEntity> entities = testMemoryDataAccess.query(testQuery);
+        PageList<TestEntity> page = testMemoryDataAccess.page(testQuery);
+        List<TestEntity> entities = page.getList();
+        assertThat(page.getTotal()).isEqualTo(5);
         assertThat(entities).hasSize(2)
                 .extracting("id")
                 .containsExactly(3, 4);
