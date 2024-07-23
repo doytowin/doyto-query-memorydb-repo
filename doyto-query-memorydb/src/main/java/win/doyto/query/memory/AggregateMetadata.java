@@ -32,6 +32,7 @@ public class AggregateMetadata {
     private static Function<List<Object>, Object> buildAggrFunc(AggregationPrefix prefix) {
         return switch (prefix) {
             case max -> efvList -> efvList.stream().max(AggregateMetadata::compare).orElse(0);
+            case min -> efvList -> efvList.stream().min(AggregateMetadata::compare).orElse(0);
             default -> // avg
                     efvList -> efvList.stream().collect(Collectors.averagingDouble(value -> ((Number) value).floatValue()));
         };

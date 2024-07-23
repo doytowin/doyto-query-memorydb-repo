@@ -16,22 +16,16 @@ import win.doyto.query.annotation.View;
 @AllArgsConstructor
 @View(EmployeeEntity.class)
 public class EmployeeView {
-
     @GroupBy
     private String department;
-
     @GroupBy
     private String gender;
-
     @GroupBy
     private String designation;
 
     private double avgSalary;
-
     private double avgBonus;
-
     private double avgPerks;
-
     private double maxSalary;
-
+    private double minSalary;
 }
