@@ -28,4 +28,5 @@ public class EmployeeView {
     private double avgPerks;
     private double maxSalary;
     private double minSalary;
+    private Integer firstPerks;
 }
