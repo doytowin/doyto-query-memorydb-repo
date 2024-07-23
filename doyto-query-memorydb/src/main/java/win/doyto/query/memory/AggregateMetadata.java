@@ -42,8 +42,9 @@ public class AggregateMetadata {
                 }
                 return sum;
             };
-            default -> // avg
-                    efvList -> efvList.stream().collect(Collectors.averagingDouble(value -> ((Number) value).floatValue()));
+            case avg ->
+                    efvList -> efvList.stream().collect(Collectors.averagingDouble(value -> ((Number) value).doubleValue()));
+            default -> List::size;
         };
     }
 

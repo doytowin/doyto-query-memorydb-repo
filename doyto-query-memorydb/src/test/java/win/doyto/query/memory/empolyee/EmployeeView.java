@@ -23,6 +23,7 @@ public class EmployeeView {
     @GroupBy
     private String designation;
 
+    private Integer count;
     private double avgSalary;
     private double avgBonus;
     private double avgPerks;
