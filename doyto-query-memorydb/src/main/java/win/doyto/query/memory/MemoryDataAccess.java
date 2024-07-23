@@ -1,19 +1,3 @@
-/*
- * Copyright © 2019-2024 Forb Yuan
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package win.doyto.query.memory;
 
 import lombok.extern.slf4j.Slf4j;
@@ -209,19 +193,23 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
             return entities.stream().map(entity -> {
                 try {
                     V view = classV.getConstructor().newInstance();
-                    for (String column : columns) {
-                        Field field = getField(entity, column);
-                        if (field != null) {
-                            Object value = readField(field, entity);
-                            writeField(field, view, value);
-                        }
-                    }
+                    copyTo(view, entity, columns);
                     return view;
                 } catch (Exception e) {
                     log.error("Failed to convert for {}[{}]:", entity.getClass().getSimpleName(), entity.getId(), e);
                     throw new RuntimeException(e);
                 }
             }).toList();
+        }
+    }
+
+    static void copyTo(Object target, Object source, String... fieldNames) {
+        for (String fieldName : fieldNames) {
+            Field field = getField(source, fieldName);
+            if (field != null) {
+                Object value = readField(field, source);
+                writeField(field, target, value);
+            }
         }
     }
 
