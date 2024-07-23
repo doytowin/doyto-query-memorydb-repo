@@ -34,6 +34,7 @@ public class AggregateMetadata {
             case max -> efvList -> efvList.stream().max(AggregateMetadata::compare).orElse(0);
             case min -> efvList -> efvList.stream().min(AggregateMetadata::compare).orElse(0);
             case first -> efvList -> efvList.stream().findFirst().orElse(null);
+            case last -> efvList -> efvList.isEmpty() ? null : efvList.get(efvList.size() - 1);
             default -> // avg
                     efvList -> efvList.stream().collect(Collectors.averagingDouble(value -> ((Number) value).floatValue()));
         };
