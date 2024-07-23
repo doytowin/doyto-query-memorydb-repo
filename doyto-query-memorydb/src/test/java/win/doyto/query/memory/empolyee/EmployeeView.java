@@ -30,4 +30,5 @@ public class EmployeeView {
     private double minSalary;
     private Integer firstPerks;
     private Integer lastPerks;
+    private Integer sumPerks;
 }

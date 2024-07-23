@@ -26,15 +26,22 @@ public class AggregateMetadata {
         String name = field.getName();
         AggregationPrefix prefix = resolveField(name);
         this.entityFieldName = prefix.resolveColumnName(name);
-        this.func = buildAggrFunc(prefix);
+        this.func = buildAggrFunc(prefix, field.getType());
     }
 
-    private static Function<List<Object>, Object> buildAggrFunc(AggregationPrefix prefix) {
+    private static Function<List<Object>, Object> buildAggrFunc(AggregationPrefix prefix, Class<?> type) {
         return switch (prefix) {
             case max -> efvList -> efvList.stream().max(AggregateMetadata::compare).orElse(0);
             case min -> efvList -> efvList.stream().min(AggregateMetadata::compare).orElse(0);
             case first -> efvList -> efvList.stream().findFirst().orElse(null);
             case last -> efvList -> efvList.isEmpty() ? null : efvList.get(efvList.size() - 1);
+            case sum -> efvList -> {
+                double sum = efvList.stream().mapToDouble(value -> ((Number) value).doubleValue()).sum();
+                if (type.isAssignableFrom(Integer.class)) {
+                    return (int) sum;
+                }
+                return sum;
+            };
             default -> // avg
                     efvList -> efvList.stream().collect(Collectors.averagingDouble(value -> ((Number) value).floatValue()));
         };
