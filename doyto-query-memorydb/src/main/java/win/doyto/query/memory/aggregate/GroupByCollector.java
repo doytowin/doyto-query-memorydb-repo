@@ -1,4 +1,4 @@
-package win.doyto.query.memory;
+package win.doyto.query.memory.aggregate;
 
 import lombok.SneakyThrows;
 import win.doyto.query.annotation.GroupBy;

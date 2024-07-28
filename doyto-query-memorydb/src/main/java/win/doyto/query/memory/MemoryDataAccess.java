@@ -12,6 +12,9 @@ import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.core.IdWrapper;
 import win.doyto.query.core.PageList;
 import win.doyto.query.entity.Persistable;
+import win.doyto.query.memory.condition.BranchConditionNode;
+import win.doyto.query.memory.datawrapper.DataWrapper;
+import win.doyto.query.memory.datawrapper.SimpleDataWrapper;
 import win.doyto.query.util.BeanUtil;
 import win.doyto.query.util.ColumnUtil;
 

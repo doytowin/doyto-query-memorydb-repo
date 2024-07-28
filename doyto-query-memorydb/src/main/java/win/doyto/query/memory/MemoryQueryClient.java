@@ -8,6 +8,7 @@ import win.doyto.query.core.AggregationQuery;
 import win.doyto.query.core.DataQueryClient;
 import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.entity.Persistable;
+import win.doyto.query.memory.aggregate.GroupByCollector;
 import win.doyto.query.util.CommonUtil;
 
 import java.io.Serializable;

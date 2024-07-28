@@ -14,16 +14,26 @@
  * limitations under the License.
  */
 
-package win.doyto.query.memory;
+package win.doyto.query.memory.condition;
 
-import java.util.function.Predicate;
+import org.junit.jupiter.api.Test;
+import win.doyto.query.test.TestEntity;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * ConditionNode
+ * LeafConditionNodeTest
  *
- * @author f0rb on 2024/7/16
+ * @author f0rb on 2024/7/21
  */
-public interface ConditionNode<E> extends Predicate<E> {
-    @Override
-    boolean test(E entity);
+class LeafConditionNodeTest {
+
+    @Test
+    void supportRx() {
+        LeafConditionNode<Object> leaf = new LeafConditionNode<>("usernameRx", "my$");
+        TestEntity testEntity = TestEntity.builder().username("Jimmy").build();
+        boolean result = leaf.test(testEntity);
+        assertTrue(result);
+    }
+
 }

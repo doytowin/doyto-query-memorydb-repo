@@ -1,4 +1,4 @@
-package win.doyto.query.memory;
+package win.doyto.query.memory.aggregate;
 
 import lombok.Getter;
 import win.doyto.query.core.AggregationPrefix;

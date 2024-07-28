@@ -1,4 +1,4 @@
-package win.doyto.query.memory;
+package win.doyto.query.memory.datawrapper;
 
 /**
  * DataWrapper
