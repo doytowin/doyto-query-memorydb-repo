@@ -21,21 +21,21 @@ import java.util.stream.Stream;
 public class GroupByCollector<V> implements Collector<Object, Map<String, List<Object>>, V> {
 
     private final Class<V> viewClass;
-    private final List<AggregateMetadata> metadataList;
+    private final List<PrefixAggregateMetadata> metadataList;
 
     public GroupByCollector(Class<V> viewClass) {
         this.viewClass = viewClass;
         this.metadataList = Arrays
                 .stream(viewClass.getDeclaredFields())
                 .filter(field -> !field.isAnnotationPresent(GroupBy.class))
-                .map(AggregateMetadata::new).toList();
+                .map(PrefixAggregateMetadata::new).toList();
     }
 
     @Override
     public Supplier<Map<String, List<Object>>> supplier() {
         return () -> {
             Map<String, List<Object>> map = new HashMap<>();
-            for (AggregateMetadata k : metadataList) {
+            for (PrefixAggregateMetadata k : metadataList) {
                 map.put(k.getEntityFieldName(), new LinkedList<>());
             }
             return map;
@@ -64,7 +64,7 @@ public class GroupByCollector<V> implements Collector<Object, Map<String, List<O
     public Function<Map<String, List<Object>>, V> finisher() {
         return map -> {
             V view = createTarget();
-            for (AggregateMetadata aggregateMetadata : metadataList) {
+            for (PrefixAggregateMetadata aggregateMetadata : metadataList) {
                 List<Object> efvList = map.get(aggregateMetadata.getEntityFieldName());
                 Object value = aggregateMetadata.execute(efvList);
                 CommonUtil.writeField(aggregateMetadata.getField(), view, value);

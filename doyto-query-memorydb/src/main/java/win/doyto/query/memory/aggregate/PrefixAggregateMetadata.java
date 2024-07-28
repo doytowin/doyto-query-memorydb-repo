@@ -11,17 +11,17 @@ import java.util.stream.Collectors;
 import static win.doyto.query.core.AggregationPrefix.resolveField;
 
 /**
- * AggregateMetadata
+ * PrefixAggregateMetadata
  *
  * @author f0rb on 2024/7/23
  */
 @Getter
-public class AggregateMetadata {
+public class PrefixAggregateMetadata {
     private final Field field;
     private final String entityFieldName;
     private final Function<List<Object>, Object> func;
 
-    public AggregateMetadata(Field field) {
+    public PrefixAggregateMetadata(Field field) {
         this.field = field;
         String name = field.getName();
         AggregationPrefix prefix = resolveField(name);
@@ -31,8 +31,8 @@ public class AggregateMetadata {
 
     private static Function<List<Object>, Object> buildAggrFunc(AggregationPrefix prefix, Class<?> type) {
         return switch (prefix) {
-            case max -> efvList -> efvList.stream().max(AggregateMetadata::compare).orElse(0);
-            case min -> efvList -> efvList.stream().min(AggregateMetadata::compare).orElse(0);
+            case max -> efvList -> efvList.stream().max(PrefixAggregateMetadata::compare).orElse(0);
+            case min -> efvList -> efvList.stream().min(PrefixAggregateMetadata::compare).orElse(0);
             case first -> efvList -> efvList.stream().findFirst().orElse(null);
             case last -> efvList -> efvList.isEmpty() ? null : efvList.get(efvList.size() - 1);
             case sum -> efvList -> {
