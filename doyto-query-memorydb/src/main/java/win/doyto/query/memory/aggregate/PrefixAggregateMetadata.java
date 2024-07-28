@@ -1,6 +1,7 @@
 package win.doyto.query.memory.aggregate;
 
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 import win.doyto.query.core.AggregationPrefix;
 
 import java.lang.reflect.Field;
@@ -16,7 +17,7 @@ import static win.doyto.query.core.AggregationPrefix.resolveField;
  * @author f0rb on 2024/7/23
  */
 @Getter
-public class PrefixAggregateMetadata {
+public class PrefixAggregateMetadata implements AggregateMetadata {
     private final Field field;
     private final String entityFieldName;
     private final Function<List<Object>, Object> func;
@@ -25,11 +26,21 @@ public class PrefixAggregateMetadata {
         this.field = field;
         String name = field.getName();
         AggregationPrefix prefix = resolveField(name);
-        this.entityFieldName = prefix.resolveColumnName(name);
+        this.entityFieldName = StringUtils.uncapitalize(prefix.resolveColumnName(name));
         this.func = buildAggrFunc(prefix, field.getType());
     }
 
-    private static Function<List<Object>, Object> buildAggrFunc(AggregationPrefix prefix, Class<?> type) {
+    @Override
+    public String getLabel() {
+        return entityFieldName;
+    }
+
+    @Override
+    public Object execute(List<Object> efvList) {
+        return this.func.apply(efvList);
+    }
+
+    static Function<List<Object>, Object> buildAggrFunc(AggregationPrefix prefix, Class<?> type) {
         return switch (prefix) {
             case max -> efvList -> efvList.stream().max(PrefixAggregateMetadata::compare).orElse(0);
             case min -> efvList -> efvList.stream().min(PrefixAggregateMetadata::compare).orElse(0);
@@ -53,7 +64,4 @@ public class PrefixAggregateMetadata {
         return ((Comparable<Object>) o1).compareTo(o2);
     }
 
-    public Object execute(List<Object> efvList) {
-        return this.func.apply(efvList);
-    }
 }

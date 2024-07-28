@@ -3,6 +3,7 @@ package win.doyto.query.memory.empolyee;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import win.doyto.query.annotation.Column;
 import win.doyto.query.annotation.GroupBy;
 import win.doyto.query.annotation.View;
 
@@ -32,4 +33,6 @@ public class EmployeeView {
     private Integer firstPerks;
     private Integer lastPerks;
     private Integer sumPerks;
+    @Column(name = "avg(salary + bonus)")
+    private double avgIncome;
 }

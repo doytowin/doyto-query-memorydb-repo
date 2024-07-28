@@ -41,10 +41,10 @@ class MemoryQueryClientTest {
         List<EmployeeView> testViews = queryClient.aggregate(new EmployeeQuery(), EmployeeView.class);
 
         assertThat(testViews).hasSize(4).contains(
-                new EmployeeView("dep1", "male", "des1", 2, 90000, 4500, 15.0, 100000, 80000, 20, 10, 30),
-                new EmployeeView("dep1", "female", "des2", 1, 70000, 3000, 13.0, 70000, 70000, 13, 13, 13),
-                new EmployeeView("dep1", "female", "des1", 1, 80000, 4000, 10.0, 80000, 80000, 10, 10, 10),
-                new EmployeeView("dep2", "male", "des1", 2, 65000, 3250, 15.5, 70000, 60000, 18, 13, 31)
+                new EmployeeView("dep1", "male", "des1", 2, 90000, 4500, 15.0, 100000, 80000, 20, 10, 30, 94500),
+                new EmployeeView("dep1", "female", "des2", 1, 70000, 3000, 13.0, 70000, 70000, 13, 13, 13, 73000),
+                new EmployeeView("dep1", "female", "des1", 1, 80000, 4000, 10.0, 80000, 80000, 10, 10, 10, 84000),
+                new EmployeeView("dep2", "male", "des1", 2, 65000, 3250, 15.5, 70000, 60000, 18, 13, 31, 68250)
         );
 
     }

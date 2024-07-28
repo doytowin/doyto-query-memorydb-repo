@@ -1,6 +1,7 @@
 package win.doyto.query.memory.aggregate;
 
 import lombok.SneakyThrows;
+import win.doyto.query.annotation.Column;
 import win.doyto.query.annotation.GroupBy;
 import win.doyto.query.util.CommonUtil;
 
@@ -20,31 +21,44 @@ import java.util.stream.Stream;
  */
 public class GroupByCollector<V> implements Collector<Object, Map<String, List<Object>>, V> {
 
+    static final  String ORIGIN_ELEM = "*";
     private final Class<V> viewClass;
-    private final List<PrefixAggregateMetadata> metadataList;
+    private final List<? extends AggregateMetadata> metadataList;
 
     public GroupByCollector(Class<V> viewClass) {
         this.viewClass = viewClass;
         this.metadataList = Arrays
                 .stream(viewClass.getDeclaredFields())
                 .filter(field -> !field.isAnnotationPresent(GroupBy.class))
-                .map(PrefixAggregateMetadata::new).toList();
+                .map(field -> {
+                    if (field.isAnnotationPresent(Column.class)) {
+                        return new ExpressionAggregateMetadata(field, field.getAnnotation(Column.class).name());
+                    }
+                    return new PrefixAggregateMetadata(field);
+                }).toList();
     }
 
     @Override
     public Supplier<Map<String, List<Object>>> supplier() {
         return () -> {
             Map<String, List<Object>> map = new HashMap<>();
-            for (PrefixAggregateMetadata k : metadataList) {
-                map.put(k.getEntityFieldName(), new LinkedList<>());
+            for (AggregateMetadata am : metadataList) {
+                map.put(am.getLabel(), new LinkedList<>());
             }
+            map.put(ORIGIN_ELEM, new LinkedList<>());
             return map;
         };
     }
 
     @Override
     public BiConsumer<Map<String, List<Object>>, Object> accumulator() {
-        return (map, entity) -> map.forEach((key, value) -> value.add(CommonUtil.readFieldGetter(entity, key)));
+        return (map, entity) -> map.forEach((key, value) -> {
+            if (key.equals(ORIGIN_ELEM)) {
+                value.add(entity);
+            } else {
+                value.add(CommonUtil.readFieldGetter(entity, key));
+            }
+        });
     }
 
     @Override
@@ -64,8 +78,8 @@ public class GroupByCollector<V> implements Collector<Object, Map<String, List<O
     public Function<Map<String, List<Object>>, V> finisher() {
         return map -> {
             V view = createTarget();
-            for (PrefixAggregateMetadata aggregateMetadata : metadataList) {
-                List<Object> efvList = map.get(aggregateMetadata.getEntityFieldName());
+            for (AggregateMetadata aggregateMetadata : metadataList) {
+                List<Object> efvList = map.get(aggregateMetadata.getLabel());
                 Object value = aggregateMetadata.execute(efvList);
                 CommonUtil.writeField(aggregateMetadata.getField(), view, value);
             }
