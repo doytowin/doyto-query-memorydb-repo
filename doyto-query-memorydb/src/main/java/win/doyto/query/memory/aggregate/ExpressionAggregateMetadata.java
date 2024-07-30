@@ -19,7 +19,7 @@ public class ExpressionAggregateMetadata implements AggregateMetadata {
 
     public ExpressionAggregateMetadata(Field field, String exp) {
         this.field = field;
-        this.expressionNode = new ExpressionNode(field, exp);
+        this.expressionNode = new ExpressionNode(exp, field.getType());
     }
 
     @Override

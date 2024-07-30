@@ -5,7 +5,6 @@ import com.googlecode.aviator.Expression;
 import win.doyto.query.core.AggregationPrefix;
 import win.doyto.query.util.CommonUtil;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +21,7 @@ import static win.doyto.query.memory.aggregate.PrefixAggregateMetadata.buildAggr
  *
  * @author f0rb on 2024/7/28
  */
-public class ExpressionNode {
+class ExpressionNode {
 
     private static final Pattern PREFIX_PTN = Pattern.compile(
             Arrays.stream(AggregationPrefix.values())
@@ -32,17 +31,17 @@ public class ExpressionNode {
     private final Expression expression;
     private final Function<List<Object>, Object> func;
 
-    public ExpressionNode(Field field, String exp) {
+    public ExpressionNode(String exp, Class<?> returnType) {
         Matcher matcher = PREFIX_PTN.matcher(exp);
         if (!matcher.find()) {
             throw new IllegalArgumentException("Illegal expression provided!");
         }
         AggregationPrefix prefix = AggregationPrefix.valueOf(matcher.group(1));
-        this.func = buildAggrFunc(prefix, field.getType());
+        this.func = buildAggrFunc(prefix, returnType);
         this.expression = AviatorEvaluator.compile(matcher.group(2));
     }
 
-    Object compute(Object entity) {
+    public Object compute(Object entity) {
         List<String> columns = expression.getVariableNames();
         Map<String, Object> env = new HashMap<>();
         for (String column : columns) {

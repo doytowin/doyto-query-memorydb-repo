@@ -1,5 +1,7 @@
 package win.doyto.query.memory;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import win.doyto.query.annotation.GroupBy;
@@ -9,6 +11,7 @@ import win.doyto.query.core.DataQueryClient;
 import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.entity.Persistable;
 import win.doyto.query.memory.aggregate.GroupByCollector;
+import win.doyto.query.memory.aggregate.SingleColumnGroupByCollector;
 import win.doyto.query.util.CommonUtil;
 
 import java.io.Serializable;
@@ -25,6 +28,7 @@ import static java.util.stream.Collectors.toMap;
  *
  * @author f0rb on 2024/7/22
  */
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public class MemoryQueryClient implements DataQueryClient {
     @Override
     public <V extends Persistable<I>, I extends Serializable, Q extends DoytoQuery> List<V> query(Q query, Class<V> viewClass) {
@@ -44,6 +48,15 @@ public class MemoryQueryClient implements DataQueryClient {
         Map<Map<String, Object>, V> groupByMap = list.parallelStream().collect(
                 groupingBy(buildGroupByFunc(viewClass), new GroupByCollector<>(viewClass)));
         writeGroupByFields(groupByMap);
+
+        return new ArrayList<>(groupByMap.values());
+    }
+
+    public <Q extends DoytoQuery> List<Object> aggregate(Q query, Class<?> entityClass, String exp) {
+        List<?> list = DataAccessManager.query(entityClass, query);
+
+        Map<Map<String, Object>, Object> groupByMap = list.parallelStream().collect(
+                groupingBy(buildGroupByFunc(entityClass), new SingleColumnGroupByCollector(exp)));
 
         return new ArrayList<>(groupByMap.values());
     }

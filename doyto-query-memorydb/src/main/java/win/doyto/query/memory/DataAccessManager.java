@@ -15,15 +15,16 @@ import java.util.Map;
  */
 @UtilityClass
 public class DataAccessManager {
-    private final Map<Class<?>, DataAccess<?, ?, ? extends DoytoQuery>> dataAccessMap = new HashMap<>();
+    private final Map<Class<?>, DataAccess<?, ?, ? super DoytoQuery>> dataAccessMap = new HashMap<>();
+    public final MemoryQueryClient CLIENT = new MemoryQueryClient();
 
-    public void register(Class<?> entityClass, DataAccess<?, ?, ? extends DoytoQuery> dataAccess) {
+    public void register(Class<?> entityClass, DataAccess<?, ?, ? super DoytoQuery> dataAccess) {
         dataAccessMap.put(entityClass, dataAccess);
     }
 
-    @SuppressWarnings({"unchecked", "java:S1452"})
-    public static <Q extends DoytoQuery> List<?> query(Class<?> entityClass, Q query) {
-        DataAccess<?, ?, Q> doytoQueryDataAccess = (DataAccess<?, ?, Q>) dataAccessMap.get(entityClass);
-        return doytoQueryDataAccess.query(query);
+    @SuppressWarnings({"unchecked"})
+    public static <E, Q extends DoytoQuery> List<E> query(Class<E> entityClass, Q query) {
+        DataAccess<?, ?, ? super DoytoQuery> doytoQueryDataAccess = dataAccessMap.get(entityClass);
+        return (List<E>) doytoQueryDataAccess.query(query);
     }
 }

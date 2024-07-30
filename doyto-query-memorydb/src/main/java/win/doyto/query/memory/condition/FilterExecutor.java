@@ -35,12 +35,19 @@ class FilterExecutor {
         map.put(Null, new NullMatcher());
         map.put(In, (efv, qfv) -> ((Collection<?>) qfv).contains(efv));
         map.put(NotIn, (efv, qfv) -> !((Collection<?>) qfv).contains(efv));
-        map.put(Gt, (efv, qfv) -> ((Comparable<Object>) efv).compareTo(qfv) > 0);
-        map.put(Lt, (efv, qfv) -> ((Comparable<Object>) efv).compareTo(qfv) < 0);
-        map.put(Ge, (efv, qfv) -> ((Comparable<Object>) efv).compareTo(qfv) >= 0);
-        map.put(Le, (efv, qfv) -> ((Comparable<Object>) efv).compareTo(qfv) <= 0);
+        map.put(Gt, (efv, qfv) -> compare(efv, qfv) > 0);
+        map.put(Lt, (efv, qfv) -> compare(efv, qfv) < 0);
+        map.put(Ge, (efv, qfv) -> compare(efv, qfv) >= 0);
+        map.put(Le, (efv, qfv) -> compare(efv, qfv) <= 0);
         map.put(Not, (efv, qfv) -> !efv.equals(qfv));
         map.put(Ne, (efv, qfv) -> !efv.equals(qfv));
+    }
+
+    private static int compare(Object efv, Object qfv) {
+        if (efv instanceof Number n1 && qfv instanceof Number n2) {
+            return Double.compare(n1.doubleValue(), n2.doubleValue());
+        }
+        return ((Comparable<Object>) efv).compareTo(qfv);
     }
 
     static Matcher get(QuerySuffix querySuffix) {

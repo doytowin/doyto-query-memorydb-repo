@@ -2,6 +2,7 @@ package win.doyto.query.memory.condition;
 
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import win.doyto.query.annotation.Subquery;
 import win.doyto.query.core.Query;
 import win.doyto.query.util.ColumnUtil;
 import win.doyto.query.util.CommonUtil;
@@ -76,7 +77,13 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
                 child = new BranchConditionNode<>(queryFieldValue, false);
             }
         } else {
-            child = new LeafConditionNode<>(queryField.getName(), queryFieldValue);
+            Subquery subquery = queryField.getAnnotation(Subquery.class);
+            if (subquery != null) {
+                child = new LeafConditionNode<>(queryField.getName(),
+                        queryFieldValue, subquery.from()[0], subquery.select());
+            } else {
+                child = new LeafConditionNode<>(queryField.getName(), queryFieldValue);
+            }
         }
         return child;
     }
