@@ -11,6 +11,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static win.doyto.query.core.QuerySuffix.*;
+import static win.doyto.query.memory.aggregate.Aggregation.compare;
 
 /**
  * FilterExecutor
@@ -41,13 +42,6 @@ class FilterExecutor {
         map.put(Le, (efv, qfv) -> compare(efv, qfv) <= 0);
         map.put(Not, (efv, qfv) -> !efv.equals(qfv));
         map.put(Ne, (efv, qfv) -> !efv.equals(qfv));
-    }
-
-    private static int compare(Object efv, Object qfv) {
-        if (efv instanceof Number n1 && qfv instanceof Number n2) {
-            return Double.compare(n1.doubleValue(), n2.doubleValue());
-        }
-        return ((Comparable<Object>) efv).compareTo(qfv);
     }
 
     static Matcher get(QuerySuffix querySuffix) {

@@ -37,7 +37,7 @@ public class Aggregation {
         do {
             String alias = "sub" + COUNT.getAndIncrement();
             matcher.appendReplacement(newExpBuilder, alias);
-            ExpressionNode expNode = new ExpressionNode(matcher.group(), double.class);
+            ExpressionNode expNode = new ExpressionNode(matcher.group(1), matcher.group(2), double.class);
             expNodeMap.put(alias, expNode);
         } while (matcher.find());
 
@@ -53,7 +53,7 @@ public class Aggregation {
             case last -> efvList -> efvList.isEmpty() ? null : efvList.get(efvList.size() - 1);
             case sum -> efvList -> {
                 double sum = efvList.stream().mapToDouble(value -> ((Number) value).doubleValue()).sum();
-                if (type.isAssignableFrom(Integer.class)) {
+                if (Integer.class.isAssignableFrom(type)) {
                     return (int) sum;
                 }
                 return sum;
@@ -65,7 +65,10 @@ public class Aggregation {
     }
 
     @SuppressWarnings("unchecked")
-    private static int compare(Object o1, Object o2) {
-        return ((Comparable<Object>) o1).compareTo(o2);
+    public static int compare(Object efv, Object qfv) {
+        if (efv instanceof Number n1 && qfv instanceof Number n2) {
+            return Double.compare(n1.doubleValue(), n2.doubleValue());
+        }
+        return ((Comparable<Object>) efv).compareTo(qfv);
     }
 }

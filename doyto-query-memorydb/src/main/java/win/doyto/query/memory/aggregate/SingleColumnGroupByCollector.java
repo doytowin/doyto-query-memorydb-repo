@@ -1,7 +1,8 @@
 package win.doyto.query.memory.aggregate;
 
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -16,34 +17,34 @@ import java.util.stream.Stream;
  *
  * @author f0rb on 2024/7/22
  */
-public class SingleColumnGroupByCollector implements Collector<Object, List<Object>, Object> {
+public class SingleColumnGroupByCollector implements Collector<Object, Map<String, List<Object>>, Object> {
 
-    private final ExpressionNode node;
+    private final ComplexExpressionNode node;
 
     public SingleColumnGroupByCollector(String exp) {
-        this.node = new ExpressionNode(exp, Object.class);
+        this.node = Aggregation.build(exp);
     }
 
     @Override
-    public Supplier<List<Object>> supplier() {
-        return LinkedList::new;
+    public Supplier<Map<String, List<Object>>> supplier() {
+        return HashMap::new;
     }
 
     @Override
-    public BiConsumer<List<Object>, Object> accumulator() {
-        return (container, entity) -> container.add(node.compute(entity));
+    public BiConsumer<Map<String, List<Object>>, Object> accumulator() {
+        return node::accumulate;
     }
 
     @Override
-    public BinaryOperator<List<Object>> combiner() {
+    public BinaryOperator<Map<String, List<Object>>> combiner() {
         return (left, right) -> {
-            left.addAll(right);
+            left.forEach((key, value) -> value.addAll(right.get(key)));
             return left;
         };
     }
 
     @Override
-    public Function<List<Object>, Object> finisher() {
+    public Function<Map<String, List<Object>>, Object> finisher() {
         return node::aggregate;
     }
 

@@ -5,14 +5,10 @@ import com.googlecode.aviator.Expression;
 import win.doyto.query.core.AggregationPrefix;
 import win.doyto.query.util.CommonUtil;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static win.doyto.query.memory.aggregate.Aggregation.buildAggrFunc;
 
@@ -23,22 +19,13 @@ import static win.doyto.query.memory.aggregate.Aggregation.buildAggrFunc;
  */
 public class ExpressionNode {
 
-    private static final Pattern PREFIX_PTN = Pattern.compile(
-            Arrays.stream(AggregationPrefix.values())
-                  .map(Enum::name)
-                  .collect(Collectors.joining("|", "^\\b(", ")\\((.+)\\)")));
-
     private final Expression expression;
-    private final Function<List<Object>, Object> func;
+    private final Function<List<Object>, Object> aggrFunc;
 
-    public ExpressionNode(String exp, Class<?> returnType) {
-        Matcher matcher = PREFIX_PTN.matcher(exp);
-        if (!matcher.find()) {
-            throw new IllegalArgumentException("Illegal expression provided!");
-        }
-        AggregationPrefix prefix = AggregationPrefix.valueOf(matcher.group(1));
-        this.func = buildAggrFunc(prefix, returnType);
-        this.expression = AviatorEvaluator.compile(matcher.group(2));
+    public ExpressionNode(String funcName, String exp, Class<?> returnType) {
+        AggregationPrefix prefix = AggregationPrefix.valueOf(funcName);
+        this.aggrFunc = buildAggrFunc(prefix, returnType);
+        this.expression = AviatorEvaluator.compile(exp);
     }
 
     public Object compute(Object entity) {
@@ -51,6 +38,6 @@ public class ExpressionNode {
     }
 
     public Object aggregate(List<Object> results) {
-        return func.apply(results);
+        return aggrFunc.apply(results);
     }
 }

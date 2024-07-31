@@ -23,7 +23,7 @@ public class ExpressionAggregateMetadata implements AggregateMetadata {
 
     @Override
     public String getLabel() {
-        return "*";
+        return "id";
     }
 
     @Override
