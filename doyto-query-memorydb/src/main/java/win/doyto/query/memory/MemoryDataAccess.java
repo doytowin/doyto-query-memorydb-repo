@@ -2,7 +2,6 @@ package win.doyto.query.memory;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import win.doyto.query.annotation.GeneratedValue;
 import win.doyto.query.annotation.Id;
@@ -20,6 +19,7 @@ import win.doyto.query.util.ColumnUtil;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,6 +27,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static win.doyto.query.memory.DataAccessManager.buildSortingMap;
+import static win.doyto.query.memory.DataAccessManager.sorting;
 import static win.doyto.query.util.CommonUtil.*;
 
 /**
@@ -37,8 +39,6 @@ import static win.doyto.query.util.CommonUtil.*;
 @Slf4j
 @SuppressWarnings({"unchecked", "java:S3740"})
 public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, Q extends DoytoQuery> implements DataAccess<E, I, Q> {
-    protected static final Map<Class<?>, Map<?, ?>> tableMap = new ConcurrentHashMap<>();
-
     protected final Map<I, DataWrapper<E>> entitiesMap = new ConcurrentHashMap<>();
     private final AtomicLong idGenerator = new AtomicLong(0);
     private final List<Field> fields;
@@ -47,8 +47,6 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
     private final Function<E, DataWrapper<E>> createDataWrapperFunc = SimpleDataWrapper::new;
 
     public MemoryDataAccess(Class<E> entityClass) {
-        tableMap.put(entityClass, entitiesMap);
-
         // init fields
         fields = ColumnUtil.getColumnFieldsFrom(entityClass);
         Field[] idFields = FieldUtils.getFieldsWithAnnotation(entityClass, Id.class);
@@ -149,7 +147,8 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         Stream<E> stream = filter(query);
 
         if (query.getSort() != null) {
-            stream = doSort(stream, query.getSort());
+            LinkedHashMap<String, Integer> sortingMap = buildSortingMap(query.getSort());
+            stream = sorting(stream, sortingMap);
         }
         if (query.needPaging()) {
             stream = truncateByPaging(stream, query);
@@ -173,7 +172,8 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         Stream<E> stream = list.stream();
 
         if (query.getSort() != null) {
-            stream = doSort(stream, query.getSort());
+            LinkedHashMap<String, Integer> sortingMap = buildSortingMap(query.getSort());
+            stream = sorting(stream, sortingMap);
         }
         if (query.needPaging()) {
             stream = truncateByPaging(stream, query);
@@ -216,19 +216,4 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         }
     }
 
-    protected Stream<E> doSort(Stream<E> stream, String sort) {
-        String[] orders = StringUtils.split(sort, ";");
-        for (int i = orders.length - 1; i >= 0; i--) {
-            String order = orders[i];
-            stream = stream.sorted((o1, o2) -> {
-                String[] pd = StringUtils.split(order, ",");
-                String property = toCamelCase(pd[0]);
-                Comparable<Object> c1 = (Comparable<Object>) readField(o1, property);
-                Object c2 = readField(o2, property);
-                int ret = c1.compareTo(c2);
-                return "asc".equalsIgnoreCase(pd[1]) ? ret : -ret;
-            });
-        }
-        return stream;
-    }
 }

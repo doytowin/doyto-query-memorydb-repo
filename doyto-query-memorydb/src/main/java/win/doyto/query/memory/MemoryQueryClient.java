@@ -12,7 +12,6 @@ import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.entity.Persistable;
 import win.doyto.query.memory.aggregate.GroupByCollector;
 import win.doyto.query.memory.aggregate.SingleColumnGroupByCollector;
-import win.doyto.query.util.CommonUtil;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -21,6 +20,7 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
+import static win.doyto.query.util.CommonUtil.readField;
 
 
 /**
@@ -42,6 +42,9 @@ public class MemoryQueryClient implements DataQueryClient {
 
     @Override
     public <V, Q extends DoytoQuery & AggregationQuery> List<V> aggregate(Q query, Class<V> viewClass) {
+        LinkedHashMap<String, Integer> sortingMap = DataAccessManager.buildSortingMap(query.getSort());
+        query.setSort(null);
+
         Class<?> entityClass = viewClass.getAnnotation(View.class).value();
         List<?> list = DataAccessManager.query(entityClass, query);
 
@@ -49,7 +52,7 @@ public class MemoryQueryClient implements DataQueryClient {
                 groupingBy(buildGroupByFunc(viewClass), new GroupByCollector<>(viewClass)));
         writeGroupByFields(groupByMap);
 
-        return new ArrayList<>(groupByMap.values());
+        return DataAccessManager.sorting(groupByMap.values().stream(), sortingMap).toList();
     }
 
     public <Q extends DoytoQuery> List<Object> aggregate(Q query, Class<?> entityClass, String exp) {
@@ -67,7 +70,7 @@ public class MemoryQueryClient implements DataQueryClient {
                                            .map(Field::getName).toList();
         return entity -> groupByFields.stream().collect(toMap(
                 k -> k,
-                k -> CommonUtil.readField(entity, k)
+                k -> readField(entity, k)
         ));
     }
 
