@@ -24,7 +24,7 @@ public class Aggregation {
             Arrays.stream(AggregationPrefix.values())
                   .map(Enum::name)
                   .collect(Collectors.joining("|", "(", ")\\(([^\\)]+)\\)")));
-    private static final AtomicInteger COUNT = new AtomicInteger();
+    protected static final AtomicInteger COUNT = new AtomicInteger();
 
     public static ComplexExpressionNode build(String exp) {
         Matcher matcher = PREFIX_PTN.matcher(exp);

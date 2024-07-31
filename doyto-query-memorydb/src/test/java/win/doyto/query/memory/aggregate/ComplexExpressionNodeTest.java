@@ -14,14 +14,16 @@ class ComplexExpressionNodeTest {
 
     @Test
     void buildNode() {
+        int i = Aggregation.COUNT.get();
         ComplexExpressionNode expressionNode = Aggregation.build("avg(salary + bonus) / salary");
-        assertThat(expressionNode.expression.getVariableNames()).containsExactly("sub0", "salary");
+        assertThat(expressionNode.expression.getVariableNames()).containsExactly("sub" + i, "salary");
     }
 
     @Test
     void supportTwoAggrFunc() {
+        int i = Aggregation.COUNT.get();
         ComplexExpressionNode expressionNode = Aggregation.build("avg(salary + bonus) / sum(salary)");
-        assertThat(expressionNode.expression.getVariableNames()).containsExactly("sub1", "sub2");
+        assertThat(expressionNode.expression.getVariableNames()).containsExactly("sub" + i++, "sub" + i);
     }
 
 }
