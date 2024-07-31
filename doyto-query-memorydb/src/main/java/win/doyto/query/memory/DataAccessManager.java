@@ -37,6 +37,7 @@ public class DataAccessManager {
 
     static LinkedHashMap<String, Integer> buildSortingMap(String sort) {
         LinkedHashMap<String, Integer> sortMap = new LinkedHashMap<>();
+        if (StringUtils.isBlank(sort)) return sortMap;
         String[] orders = StringUtils.split(sort, ";");
         for (int i = orders.length - 1; i >= 0; i--) {
             String order = orders[i];
@@ -48,7 +49,7 @@ public class DataAccessManager {
         return sortMap;
     }
 
-     static <V> Stream<V> sorting(Stream<V> stream, LinkedHashMap<String, Integer> sortingMap) {
+    static <V> Stream<V> sorting(Stream<V> stream, LinkedHashMap<String, Integer> sortingMap) {
         for (Map.Entry<String, Integer> entry : sortingMap.entrySet()) {
             stream = stream.sorted((o1, o2) -> {
                 Object c1 = readField(o1, entry.getKey());

@@ -23,4 +23,5 @@ public class EmployeeQuery extends PageQuery implements AggregationQuery {
     private String gender;
     @Subquery(select = "avg(salary)", from = EmployeeEntity.class)
     private EmployeeQuery salaryGt;
+    private EmployeeHaving having;
 }

@@ -12,11 +12,13 @@ import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.entity.Persistable;
 import win.doyto.query.memory.aggregate.GroupByCollector;
 import win.doyto.query.memory.aggregate.SingleColumnGroupByCollector;
+import win.doyto.query.memory.condition.BranchConditionNode;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
@@ -52,7 +54,13 @@ public class MemoryQueryClient implements DataQueryClient {
                 groupingBy(buildGroupByFunc(viewClass), new GroupByCollector<>(viewClass)));
         writeGroupByFields(groupByMap);
 
-        return DataAccessManager.sorting(groupByMap.values().stream(), sortingMap).toList();
+        Stream<V> stream = groupByMap.values().stream();
+        if (query.getHaving() != null) {
+            BranchConditionNode<V> root = new BranchConditionNode<>(query.getHaving());
+            stream = stream.filter(root);
+        }
+
+        return DataAccessManager.sorting(stream, sortingMap).toList();
     }
 
     public <Q extends DoytoQuery> List<Object> aggregate(Q query, Class<?> entityClass, String exp) {

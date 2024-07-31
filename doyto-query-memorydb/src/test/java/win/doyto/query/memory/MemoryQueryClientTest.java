@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.memory.empolyee.EmployeeEntity;
+import win.doyto.query.memory.empolyee.EmployeeHaving;
 import win.doyto.query.memory.empolyee.EmployeeQuery;
 import win.doyto.query.memory.empolyee.EmployeeView;
 
@@ -49,6 +50,20 @@ class MemoryQueryClientTest {
                 new EmployeeView("dep1", "female", "des2", 1, 70000, 3000, 13.0, 70000, 70000, 13, 13, 13, 73000, 1.042857142857143)
         );
 
+    }
+
+    @Test
+    void supportHaving() {
+        EmployeeHaving having = EmployeeHaving.builder().avgBonusGe(4000).build();
+        EmployeeQuery query = EmployeeQuery.builder().having(having).build();
+        List<EmployeeView> testViews = DataAccessManager.CLIENT.aggregate(query, EmployeeView.class);
+
+        assertThat(testViews)
+                .extracting("department", "gender", "designation", "avgBonus")
+                .containsExactly(
+                        Tuple.tuple("dep1", "female", "des1", 4000.0),
+                        Tuple.tuple("dep1", "male", "des1", 4500.0)
+                );
     }
 
     @Test
