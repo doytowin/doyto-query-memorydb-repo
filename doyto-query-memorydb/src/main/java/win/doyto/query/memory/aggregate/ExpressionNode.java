@@ -14,14 +14,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static win.doyto.query.memory.aggregate.PrefixAggregateMetadata.buildAggrFunc;
+import static win.doyto.query.memory.aggregate.Aggregation.buildAggrFunc;
 
 /**
  * ExpressionNode
  *
  * @author f0rb on 2024/7/28
  */
-class ExpressionNode {
+public class ExpressionNode {
 
     private static final Pattern PREFIX_PTN = Pattern.compile(
             Arrays.stream(AggregationPrefix.values())
@@ -50,7 +50,7 @@ class ExpressionNode {
         return expression.execute(env);
     }
 
-    public Object summarize(List<Object> results) {
+    public Object aggregate(List<Object> results) {
         return func.apply(results);
     }
 }

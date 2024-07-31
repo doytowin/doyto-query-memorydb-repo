@@ -44,7 +44,7 @@ public class SingleColumnGroupByCollector implements Collector<Object, List<Obje
 
     @Override
     public Function<List<Object>, Object> finisher() {
-        return node::summarize;
+        return node::aggregate;
     }
 
     @Override

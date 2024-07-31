@@ -4,8 +4,7 @@ import lombok.Getter;
 
 import java.lang.reflect.Field;
 import java.util.List;
-
-import static win.doyto.query.memory.aggregate.GroupByCollector.ORIGIN_ELEM;
+import java.util.Map;
 
 /**
  * ExpressionAggregateMetadata
@@ -15,21 +14,25 @@ import static win.doyto.query.memory.aggregate.GroupByCollector.ORIGIN_ELEM;
 public class ExpressionAggregateMetadata implements AggregateMetadata {
     @Getter
     private final Field field;
-    private final ExpressionNode expressionNode;
+    private final ComplexExpressionNode complexExpressionNode;
 
     public ExpressionAggregateMetadata(Field field, String exp) {
         this.field = field;
-        this.expressionNode = new ExpressionNode(exp, field.getType());
+        this.complexExpressionNode = Aggregation.build(exp);
     }
 
     @Override
     public String getLabel() {
-        return ORIGIN_ELEM;
+        return "*";
     }
 
     @Override
-    public Object execute(List<Object> entityList) {
-        List<Object> results = entityList.stream().map(expressionNode::compute).toList();
-        return expressionNode.summarize(results);
+    public void accumulate(Map<String, List<Object>> map, Object entity) {
+        complexExpressionNode.accumulate(map, entity);
+    }
+
+    @Override
+    public Object execute(Map<String, List<Object>> efvMap) {
+        return complexExpressionNode.aggregate(efvMap);
     }
 }

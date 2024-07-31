@@ -35,4 +35,6 @@ public class EmployeeView {
     private Integer sumPerks;
     @Column(name = "avg(salary + bonus)")
     private double avgIncome;
+    @Column(name = "sum(salary + bonus) / sum(salary)")
+    private double bonusRate;
 }

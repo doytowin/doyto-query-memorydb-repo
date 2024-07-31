@@ -2,6 +2,7 @@ package win.doyto.query.memory.aggregate;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 
 /**
  * AggregateMetadata
@@ -14,12 +15,15 @@ public interface AggregateMetadata {
 
     String getLabel();
 
+    default void accumulate(Map<String, List<Object>> map, Object entity) {
+    }
+
     /**
      * Compute the aggregate result of the input values.
      *
-     * @param efvList a value list of an entity field.
+     * @param efvMap a map of the fields value list.
      * @return aggregate result.
      */
-    Object execute(List<Object> efvList);
+    Object execute(Map<String, List<Object>> efvMap);
 
 }
