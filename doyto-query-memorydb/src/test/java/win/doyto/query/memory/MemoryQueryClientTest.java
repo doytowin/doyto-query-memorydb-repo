@@ -4,10 +4,10 @@ import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.core.DoytoQuery;
+import win.doyto.query.memory.empolyee.EmployeeAggrView;
 import win.doyto.query.memory.empolyee.EmployeeEntity;
 import win.doyto.query.memory.empolyee.EmployeeHaving;
 import win.doyto.query.memory.empolyee.EmployeeQuery;
-import win.doyto.query.memory.empolyee.EmployeeView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,13 +41,13 @@ class MemoryQueryClientTest {
     @Test
     void aggregate() {
         EmployeeQuery query = EmployeeQuery.builder().sort("maxSalary,desc;avgSalary").build();
-        List<EmployeeView> testViews = DataAccessManager.CLIENT.aggregate(query, EmployeeView.class);
+        List<EmployeeAggrView> testViews = DataAccessManager.CLIENT.aggregate(query, EmployeeAggrView.class);
 
         assertThat(testViews).hasSize(4).containsExactly(
-                new EmployeeView("dep1", "male", "des1", 2, 90000, 4500, 15.0, 100000, 80000, 20, 10, 30, 94500, 1.05),
-                new EmployeeView("dep1", "female", "des1", 1, 80000, 4000, 10.0, 80000, 80000, 10, 10, 10, 84000, 1.05),
-                new EmployeeView("dep2", "male", "des1", 2, 65000, 3250, 15.5, 70000, 60000, 18, 13, 31, 68250, 1.05),
-                new EmployeeView("dep1", "female", "des2", 1, 70000, 3000, 13.0, 70000, 70000, 13, 13, 13, 73000, 1.042857142857143)
+                new EmployeeAggrView("dep1", "male", "des1", 2, 90000, 4500, 15.0, 100000, 80000, 20, 10, 30, 94500, 1.05),
+                new EmployeeAggrView("dep1", "female", "des1", 1, 80000, 4000, 10.0, 80000, 80000, 10, 10, 10, 84000, 1.05),
+                new EmployeeAggrView("dep2", "male", "des1", 2, 65000, 3250, 15.5, 70000, 60000, 18, 13, 31, 68250, 1.05),
+                new EmployeeAggrView("dep1", "female", "des2", 1, 70000, 3000, 13.0, 70000, 70000, 13, 13, 13, 73000, 1.042857142857143)
         );
 
     }
@@ -56,7 +56,7 @@ class MemoryQueryClientTest {
     void supportHaving() {
         EmployeeHaving having = EmployeeHaving.builder().avgBonusGe(4000).build();
         EmployeeQuery query = EmployeeQuery.builder().having(having).build();
-        List<EmployeeView> testViews = DataAccessManager.CLIENT.aggregate(query, EmployeeView.class);
+        List<EmployeeAggrView> testViews = DataAccessManager.CLIENT.aggregate(query, EmployeeAggrView.class);
 
         assertThat(testViews)
                 .extracting("department", "gender", "designation", "avgBonus")

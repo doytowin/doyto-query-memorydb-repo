@@ -8,7 +8,7 @@ import win.doyto.query.annotation.GroupBy;
 import win.doyto.query.annotation.View;
 
 /**
- * EmployeeView
+ * EmployeeAggrView
  *
  * @author f0rb on 2024/7/22
  */
@@ -16,7 +16,7 @@ import win.doyto.query.annotation.View;
 @NoArgsConstructor
 @AllArgsConstructor
 @View(EmployeeEntity.class)
-public class EmployeeView {
+public class EmployeeAggrView {
     @GroupBy
     private String department;
     @GroupBy
