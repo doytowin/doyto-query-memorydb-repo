@@ -1,6 +1,5 @@
 package win.doyto.query.memory.condition;
 
-import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import win.doyto.query.annotation.Subquery;
 import win.doyto.query.core.Query;
@@ -11,6 +10,7 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.function.Predicate;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static win.doyto.query.core.QuerySuffix.isValidValue;
 import static win.doyto.query.util.CommonUtil.readField;
 
@@ -19,7 +19,6 @@ import static win.doyto.query.util.CommonUtil.readField;
  *
  * @author f0rb on 2024/7/16
  */
-@Getter
 public class BranchConditionNode<E> implements ConditionNode<E> {
 
     private Predicate<E> delegate;
@@ -62,6 +61,11 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
     }
 
     private static <T> ConditionNode<T> buildChild(Field queryField, Object queryFieldValue) {
+        return buildChild(queryField, queryFieldValue, EMPTY);
+    }
+
+    private static <T> ConditionNode<T> buildChild(Field queryField, Object queryFieldValue, String path) {
+        String alias = StringUtils.isBlank(path) ? EMPTY : path + ".";
         ConditionNode<T> child;
         if (queryField.getName().endsWith("Or")) {
             if (Collection.class.isAssignableFrom(queryField.getType())
@@ -81,11 +85,31 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
             if (subquery != null) {
                 child = new LeafConditionNode<>(queryField.getName(),
                         queryFieldValue, subquery.from()[0], subquery.select());
+            } else if (Query.class.isAssignableFrom(queryField.getType())) {
+                child = buildAndBranchNodeForNested(alias + queryField.getName(), queryFieldValue);
             } else {
-                child = new LeafConditionNode<>(queryField.getName(), queryFieldValue);
+                child = new LeafConditionNode<>(alias + queryField.getName(), queryFieldValue);
             }
         }
         return child;
+    }
+
+    private static <E> ConditionNode<E> buildAndBranchNodeForNested(String path, Object target) {
+        Predicate<E> branch = t -> true;
+        int count = 0;
+        Field[] fields = ColumnUtil.queryFields(target.getClass());
+        for (Field field : fields) {
+            Object value = readField(field, target);
+            if (isValidValue(value, field)) {
+                ConditionNode<E> child = buildChild(field, value, path);
+                if (!(child instanceof BranchConditionNode<?> branchNode) || branchNode.count > 0) {
+                    // add when child is leaf node or non-empty branch node
+                    branch = branch.and(child);
+                    count++;
+                }
+            }
+        }
+        return new BranchConditionNode<>(branch, count);
     }
 
     private static <T> ConditionNode<T> buildOrBranchNodeForListWithCustomType(Collection<?> list) {

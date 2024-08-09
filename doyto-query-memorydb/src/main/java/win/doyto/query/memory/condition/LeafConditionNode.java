@@ -5,10 +5,12 @@ import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.core.QuerySuffix;
 import win.doyto.query.memory.DataAccessManager;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.function.Predicate;
 
 import static win.doyto.query.core.QuerySuffix.*;
+import static win.doyto.query.util.CommonUtil.getField;
 import static win.doyto.query.util.CommonUtil.readField;
 
 /**
@@ -55,10 +57,21 @@ public class LeafConditionNode<E> implements ConditionNode<E> {
 
     @Override
     public boolean test(E entity) {
-        Object entityFieldValue = readField(entity, entityFieldName);
+        Object entityFieldValue = readNestedField(entity, entityFieldName);
         boolean result = delegate.test(entityFieldValue);
         log.debug("Filtering for [{}.{}]: ({} {}) -> {}", entity.getClass().getSimpleName(),
                 entityFieldName, entityFieldValue, condition, result);
         return result;
+    }
+
+    private static Object readNestedField(Object target, String path) {
+        for (String property : path.split("\\.")) {
+            Field field = getField(target, property);
+            target = readField(field, target);
+            if (target == null) {
+                return null;
+            }
+        }
+        return target;
     }
 }
