@@ -1,13 +1,11 @@
 package win.doyto.query.memory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.core.DataAccess;
-import win.doyto.query.memory.inventory.InventoryEntity;
-import win.doyto.query.memory.inventory.InventoryQuery;
-import win.doyto.query.memory.inventory.SizeQuery;
-import win.doyto.query.memory.inventory.UnitQuery;
+import win.doyto.query.memory.inventory.*;
 import win.doyto.query.util.BeanUtil;
 
 import java.io.IOException;
@@ -25,7 +23,7 @@ class NestedQueryTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        inventoryDataAccess = new MemoryDataAccess<>(InventoryEntity.class);
+        inventoryDataAccess = DataAccessManager.create(InventoryEntity.class);
         List<InventoryEntity> data = BeanUtil.loadJsonData("/inventory.json", new TypeReference<>() {
         });
         inventoryDataAccess.batchInsert(data);
@@ -46,6 +44,18 @@ class NestedQueryTest {
 
         List<InventoryEntity> entities = inventoryDataAccess.query(query);
         assertThat(entities).hasSize(1);
+    }
+
+    @Test
+    void supportAggregateForNestedFields() {
+        InventoryQuery query = InventoryQuery.builder().build();
+        List<InventoryView> entities = DataAccessManager.CLIENT.aggregate(query, InventoryView.class);
+        assertThat(entities)
+                .extracting("status", "sumQty", "sumHeight")
+                .containsExactlyInAnyOrder(
+                        Tuple.tuple("A", 120, 32.5),
+                        Tuple.tuple("D", 175, 31.35)
+                );
     }
 
 }

@@ -4,8 +4,10 @@ import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import win.doyto.query.core.DataAccess;
 import win.doyto.query.core.DoytoQuery;
+import win.doyto.query.entity.Persistable;
 import win.doyto.query.memory.aggregate.Aggregation;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,8 +27,12 @@ public class DataAccessManager {
     private final Map<Class<?>, DataAccess<?, ?, ? super DoytoQuery>> dataAccessMap = new HashMap<>();
     public final MemoryQueryClient CLIENT = new MemoryQueryClient();
 
-    public void register(Class<?> entityClass, DataAccess<?, ?, ? super DoytoQuery> dataAccess) {
+    @SuppressWarnings({"unchecked"})
+    public synchronized <E extends Persistable<I>, I extends Serializable, Q extends DoytoQuery>
+    MemoryDataAccess<E, I, Q> create(Class<E> entityClass) {
+        MemoryDataAccess<E, I, DoytoQuery> dataAccess = new MemoryDataAccess<>(entityClass);
         dataAccessMap.put(entityClass, dataAccess);
+        return (MemoryDataAccess<E, I, Q>) dataAccess;
     }
 
     @SuppressWarnings({"unchecked"})

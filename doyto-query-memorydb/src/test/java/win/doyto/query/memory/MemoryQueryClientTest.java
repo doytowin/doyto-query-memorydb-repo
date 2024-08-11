@@ -26,8 +26,9 @@ class MemoryQueryClientTest {
      */
     @BeforeAll
     static void beforeAll() {
-        MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> empDataAccess = new MemoryDataAccess<>(EmployeeEntity.class);
-        DataAccessManager.register(EmployeeEntity.class, empDataAccess);
+        MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> empDataAccess =
+                DataAccessManager.create(EmployeeEntity.class);
+
         List<EmployeeEntity> employees = new ArrayList<>();
         employees.add(new EmployeeEntity("bill", "dep1", "male", "des1", 100000, 5000, 20));
         employees.add(new EmployeeEntity("john", "dep1", "male", "des1", 80000, 4000, 10));
