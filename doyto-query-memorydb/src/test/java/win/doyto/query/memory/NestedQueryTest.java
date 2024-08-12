@@ -22,7 +22,7 @@ class NestedQueryTest {
     @BeforeEach
     void setUp() {
         String path = this.getClass().getResource(File.separator).getPath();
-        inventoryDataAccess = DataAccessManager.create(InventoryEntity.class, path);
+        inventoryDataAccess = MemoryDataAccessManager.create(InventoryEntity.class, path);
     }
 
     @Test
@@ -44,8 +44,7 @@ class NestedQueryTest {
 
     @Test
     void supportAggregateForNestedFields() {
-        InventoryQuery query = InventoryQuery.builder().build();
-        List<InventoryView> entities = DataAccessManager.CLIENT.aggregate(query, InventoryView.class);
+        List<InventoryView> entities = MemoryDataAccessManager.aggregate(InventoryView.class, new InventoryAggrQuery());
         assertThat(entities)
                 .extracting("status", "sumQty", "sumHeight")
                 .containsExactlyInAnyOrder(

@@ -20,7 +20,7 @@ class NoneGeneratedIdTest {
     void createNoneGeneratedIdEntity() {
 
         MemoryDataAccess<NoneGeneratedIdEntity, Integer, PageQuery> testMemoryDataAccess
-                = DataAccessManager.create(NoneGeneratedIdEntity.class);
+                = MemoryDataAccessManager.create(NoneGeneratedIdEntity.class);
 
         NoneGeneratedIdEntity noneGeneratedIdEntity = new NoneGeneratedIdEntity();
         noneGeneratedIdEntity.setId(1);

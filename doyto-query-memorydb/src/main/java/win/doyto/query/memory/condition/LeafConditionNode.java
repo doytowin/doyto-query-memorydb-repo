@@ -3,7 +3,7 @@ package win.doyto.query.memory.condition;
 import lombok.extern.slf4j.Slf4j;
 import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.core.QuerySuffix;
-import win.doyto.query.memory.DataAccessManager;
+import win.doyto.query.memory.MemoryDataAccessManager;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -44,7 +44,7 @@ public class LeafConditionNode<E> implements ConditionNode<E> {
     }
 
     private static List<?> doSubquery(Object queryFieldValue, Class<?> entityClass, String exp) {
-        return DataAccessManager.CLIENT.aggregate((DoytoQuery) queryFieldValue, entityClass, exp);
+        return MemoryDataAccessManager.aggregate((DoytoQuery) queryFieldValue, entityClass, exp);
     }
 
     private static String buildCondition(QuerySuffix querySuffix, Object queryFieldValue) {

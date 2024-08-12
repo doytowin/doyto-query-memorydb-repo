@@ -5,10 +5,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import win.doyto.query.core.Having;
+import win.doyto.query.core.AggregatedQuery;
 
 /**
- * EmployeeHaving
+ * EmployeeAggrQuery
  *
  * @author f0rb on 2024/7/31
  */
@@ -17,6 +17,7 @@ import win.doyto.query.core.Having;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmployeeHaving implements Having {
+public class EmployeeAggrQuery extends AggregatedQuery {
     private Integer avgBonusGe;
+    private EmployeeQuery entityQuery;
 }

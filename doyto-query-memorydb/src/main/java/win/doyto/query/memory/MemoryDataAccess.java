@@ -31,8 +31,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static win.doyto.query.memory.DataAccessManager.buildSortingMap;
-import static win.doyto.query.memory.DataAccessManager.sorting;
+import static win.doyto.query.memory.MemoryDataAccessManager.buildSortingMap;
+import static win.doyto.query.memory.MemoryDataAccessManager.sorting;
 import static win.doyto.query.util.CommonUtil.*;
 
 /**

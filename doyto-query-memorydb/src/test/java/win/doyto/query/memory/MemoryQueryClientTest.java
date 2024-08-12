@@ -4,9 +4,9 @@ import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.core.DoytoQuery;
+import win.doyto.query.memory.empolyee.EmployeeAggrQuery;
 import win.doyto.query.memory.empolyee.EmployeeAggrView;
 import win.doyto.query.memory.empolyee.EmployeeEntity;
-import win.doyto.query.memory.empolyee.EmployeeHaving;
 import win.doyto.query.memory.empolyee.EmployeeQuery;
 
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ class MemoryQueryClientTest {
     @BeforeAll
     static void beforeAll() {
         MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> empDataAccess =
-                DataAccessManager.create(EmployeeEntity.class);
+                MemoryDataAccessManager.create(EmployeeEntity.class);
 
         List<EmployeeEntity> employees = new ArrayList<>();
         employees.add(new EmployeeEntity("bill", "dep1", "male", "des1", 100000, 5000, 20));
@@ -41,8 +41,8 @@ class MemoryQueryClientTest {
 
     @Test
     void aggregate() {
-        EmployeeQuery query = EmployeeQuery.builder().sort("maxSalary,desc;avgSalary").build();
-        List<EmployeeAggrView> testViews = DataAccessManager.CLIENT.aggregate(query, EmployeeAggrView.class);
+        EmployeeAggrQuery aggrQuery = EmployeeAggrQuery.builder().sort("maxSalary,desc;avgSalary").build();
+        List<EmployeeAggrView> testViews = MemoryDataAccessManager.aggregate(EmployeeAggrView.class, aggrQuery);
 
         assertThat(testViews).hasSize(4).containsExactly(
                 new EmployeeAggrView("dep1", "male", "des1", 2, 90000, 4500, 15.0, 100000, 80000, 20, 10, 30, 94500, 1.05),
@@ -55,9 +55,8 @@ class MemoryQueryClientTest {
 
     @Test
     void supportHaving() {
-        EmployeeHaving having = EmployeeHaving.builder().avgBonusGe(4000).build();
-        EmployeeQuery query = EmployeeQuery.builder().having(having).build();
-        List<EmployeeAggrView> testViews = DataAccessManager.CLIENT.aggregate(query, EmployeeAggrView.class);
+        EmployeeAggrQuery aggrQuery = EmployeeAggrQuery.builder().avgBonusGe(4000).build();
+        List<EmployeeAggrView> testViews = MemoryDataAccessManager.aggregate(EmployeeAggrView.class, aggrQuery);
 
         assertThat(testViews)
                 .extracting("department", "gender", "designation", "avgBonus")
@@ -70,7 +69,7 @@ class MemoryQueryClientTest {
     @Test
     void supportSubquery() {
         EmployeeQuery query = EmployeeQuery.builder().gender("male").salaryGt(EmployeeQuery.builder().build()).build();
-        List<EmployeeEntity> entities = DataAccessManager.query(EmployeeEntity.class, query);
+        List<EmployeeEntity> entities = MemoryDataAccessManager.query(EmployeeEntity.class, query);
         assertThat(entities)
                 .extracting("id", "gender", "salary")
                 .containsExactlyInAnyOrder(

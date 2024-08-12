@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import win.doyto.query.annotation.Subquery;
-import win.doyto.query.core.AggregationQuery;
 import win.doyto.query.core.PageQuery;
 
 /**
@@ -19,9 +18,8 @@ import win.doyto.query.core.PageQuery;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmployeeQuery extends PageQuery implements AggregationQuery {
+public class EmployeeQuery extends PageQuery {
     private String gender;
     @Subquery(select = "avg(salary)", from = EmployeeEntity.class)
     private EmployeeQuery salaryGt;
-    private EmployeeHaving having;
 }

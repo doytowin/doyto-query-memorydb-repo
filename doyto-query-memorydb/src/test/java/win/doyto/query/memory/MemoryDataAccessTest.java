@@ -26,7 +26,7 @@ class MemoryDataAccessTest {
 
     @BeforeEach
     void setUp() {
-        testMemoryDataAccess = DataAccessManager.create(TestEntity.class);
+        testMemoryDataAccess = MemoryDataAccessManager.create(TestEntity.class);
         testMemoryDataAccess.batchInsert(initUserEntities());
     }
 

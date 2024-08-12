@@ -7,16 +7,16 @@ import win.doyto.query.memory.empolyee.EmployeeEntity;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * DataAccessManagerTest
+ * MemoryDataAccessManagerTest
  *
  * @author f0rb on 2024/8/12
  */
-class DataAccessManagerTest {
+class MemoryDataAccessManagerTest {
 
     @Test
     void shouldFailWhenEntityDataDirNotExist() {
         assertThrows(FileIOException.class, () ->
-                DataAccessManager.create(EmployeeEntity.class, "/none/exist/path"));
+                MemoryDataAccessManager.create(EmployeeEntity.class, "/none/exist/path"));
     }
 
 }
