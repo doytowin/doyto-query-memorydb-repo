@@ -1,14 +1,12 @@
 package win.doyto.query.memory;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.core.DataAccess;
 import win.doyto.query.memory.inventory.*;
-import win.doyto.query.util.BeanUtil;
 
-import java.io.IOException;
+import java.io.File;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,11 +20,9 @@ class NestedQueryTest {
     DataAccess<InventoryEntity, Integer, InventoryQuery> inventoryDataAccess;
 
     @BeforeEach
-    void setUp() throws IOException {
-        inventoryDataAccess = DataAccessManager.create(InventoryEntity.class);
-        List<InventoryEntity> data = BeanUtil.loadJsonData("/inventory.json", new TypeReference<>() {
-        });
-        inventoryDataAccess.batchInsert(data);
+    void setUp() {
+        String path = this.getClass().getResource(File.separator).getPath();
+        inventoryDataAccess = DataAccessManager.create(InventoryEntity.class, path);
     }
 
     @Test

@@ -1,5 +1,8 @@
 package win.doyto.query.memory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -12,13 +15,14 @@ import win.doyto.query.core.IdWrapper;
 import win.doyto.query.core.PageList;
 import win.doyto.query.entity.Persistable;
 import win.doyto.query.memory.condition.BranchConditionNode;
-import win.doyto.query.memory.datawrapper.DataWrapper;
-import win.doyto.query.memory.datawrapper.SimpleDataWrapper;
+import win.doyto.query.memory.datawrapper.*;
 import win.doyto.query.util.BeanUtil;
 import win.doyto.query.util.ColumnUtil;
 
+import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +48,8 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
     private final List<Field> fields;
     private final Field idField;
     private final Class<I> idClass;
-    private final Function<E, DataWrapper<E>> createDataWrapperFunc = SimpleDataWrapper::new;
+    @Setter
+    private Function<E, DataWrapper<E>> createDataWrapperFunc = SimpleDataWrapper::new;
 
     public MemoryDataAccess(Class<E> entityClass) {
         // init fields
@@ -55,6 +60,26 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
             idField = idFields[0];
         } else {
             idField = null;
+        }
+    }
+
+    void loadData(Class<E> entityClass, File root) {
+        TypeReference<BsonFileDataWrapper<E>> typeReference = new TypeReference<>() {
+            @Override
+            public Type getType() {
+                return TypeFactory.defaultInstance().constructParametricType(BsonFileDataWrapper.class, entityClass);
+            }
+        };
+
+        try {
+            String[] files = root.list((dir, name) -> name.endsWith(".bson"));
+            for (String filename : files) {
+                File file = new File(root, filename);
+                BsonFileDataWrapper<E> dataWrapper = BsonUtils.loadData(file, typeReference);
+                entitiesMap.put(dataWrapper.get().getId(), dataWrapper);
+            }
+        } catch (Exception e) {
+            throw new FileIOException("Failed to load data from: " + root.getAbsolutePath(), e);
         }
     }
 
@@ -117,6 +142,7 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
                 writeField(field, origin, value);
             }
         }
+        entitiesMap.put(origin.getId(), createDataWrapperFunc.apply(origin));
         return 1;
     }
 
