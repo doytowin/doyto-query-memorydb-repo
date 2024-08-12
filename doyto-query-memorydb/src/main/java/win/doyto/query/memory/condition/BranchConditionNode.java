@@ -8,6 +8,8 @@ import win.doyto.query.util.CommonUtil;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -20,6 +22,7 @@ import static win.doyto.query.util.CommonUtil.readField;
  * @author f0rb on 2024/7/16
  */
 public class BranchConditionNode<E> implements ConditionNode<E> {
+    private static final Map<Class<?>, Field[]> classFieldsMap = new ConcurrentHashMap<>();
 
     private Predicate<E> delegate;
     private int count;
@@ -46,7 +49,7 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
      */
     public BranchConditionNode(Object target, boolean and) {
         delegate = and ? t -> true : t -> false;
-        Field[] fields = ColumnUtil.queryFields(target.getClass());
+        Field[] fields = queryFields(target.getClass());
         for (Field field : fields) {
             Object value = readField(field, target);
             if (isValidValue(value, field)) {
@@ -58,6 +61,14 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
                 }
             }
         }
+    }
+
+    public static Field[] queryFields(Class<?> queryClass) {
+        return classFieldsMap.computeIfAbsent(queryClass, BranchConditionNode::filterFields);
+    }
+
+    private static Field[] filterFields(Class<?> queryClass) {
+        return ColumnUtil.filterFields(queryClass, ColumnUtil::shouldRetain).toArray(Field[]::new);
     }
 
     private static <T> ConditionNode<T> buildChild(Field queryField, Object queryFieldValue) {
