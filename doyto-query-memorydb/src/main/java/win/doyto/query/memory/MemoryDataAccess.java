@@ -63,19 +63,19 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         }
     }
 
-    void loadData(Class<E> entityClass, File root) {
-        TypeReference<BsonFileDataWrapper<E>> typeReference = new TypeReference<>() {
+    void loadData(Class<E> entityClass, File root, FileType fileType) {
+        TypeReference<FileDataWrapper<E>> typeReference = new TypeReference<>() {
             @Override
             public Type getType() {
-                return TypeFactory.defaultInstance().constructParametricType(BsonFileDataWrapper.class, entityClass);
+                return TypeFactory.defaultInstance().constructParametricType(FileDataWrapper.class, entityClass);
             }
         };
 
         try {
-            String[] files = root.list((dir, name) -> name.endsWith(".bson"));
+            String[] files = root.list((dir, name) -> name.endsWith(fileType.getSuffix()));
             for (String filename : files) {
                 File file = new File(root, filename);
-                BsonFileDataWrapper<E> dataWrapper = BsonUtils.loadData(file, typeReference);
+                FileDataWrapper<E> dataWrapper = fileType.load(file, typeReference);
                 entitiesMap.put(dataWrapper.get().getId(), dataWrapper);
             }
         } catch (Exception e) {

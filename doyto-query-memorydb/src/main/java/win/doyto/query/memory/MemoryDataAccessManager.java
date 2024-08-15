@@ -15,8 +15,9 @@ import win.doyto.query.memory.aggregate.SingleColumnGroupByCollector;
 import win.doyto.query.memory.condition.BranchConditionNode;
 import win.doyto.query.memory.datamapper.DataMapper;
 import win.doyto.query.memory.datamapper.DefaultDataMapper;
-import win.doyto.query.memory.datawrapper.BsonFileDataWrapper;
+import win.doyto.query.memory.datawrapper.FileDataWrapper;
 import win.doyto.query.memory.datawrapper.FileIOException;
+import win.doyto.query.memory.datawrapper.FileType;
 
 import java.io.File;
 import java.io.Serializable;
@@ -44,18 +45,23 @@ public class MemoryDataAccessManager {
         return create(entityClass, null);
     }
 
-    @SuppressWarnings({"unchecked"})
     public synchronized <E extends Persistable<I>, I extends Serializable, Q extends DoytoQuery>
     MemoryDataAccess<E, I, Q> create(Class<E> entityClass, String store) {
+        return create(entityClass, store, FileType.BSON);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public synchronized <E extends Persistable<I>, I extends Serializable, Q extends DoytoQuery>
+    MemoryDataAccess<E, I, Q> create(Class<E> entityClass, String store, FileType fileType) {
         MemoryDataAccess<E, I, DoytoQuery> dataAccess = new MemoryDataAccess<>(entityClass);
         if (store != null) {
             String dataRoot = store + entityClass.getSimpleName() + File.separator;
-            dataAccess.setCreateDataWrapperFunc(e -> new BsonFileDataWrapper<>(e).flush(dataRoot));
+            dataAccess.setCreateDataWrapperFunc(e -> new FileDataWrapper<>(fileType, e).flush(dataRoot));
             File root = new File(dataRoot);
             if (!root.exists() && !root.mkdirs()) {
                 throw new FileIOException("Failed to create data directory: " + dataRoot);
             }
-            dataAccess.loadData(entityClass, root);
+            dataAccess.loadData(entityClass, root, fileType);
         }
 
         dataAccessMap.put(entityClass, dataAccess);

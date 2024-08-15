@@ -1,28 +1,38 @@
 package win.doyto.query.memory.datawrapper;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import win.doyto.query.entity.Persistable;
 
 import java.io.IOException;
 
 /**
- * BsonFileDataWrapper
+ * FileDataWrapper
  *
  * @author f0rb on 2024/8/12
  */
+@Getter
+@Setter
 @NoArgsConstructor
-public class BsonFileDataWrapper<E extends Persistable<?>> extends SimpleDataWrapper<E> {
+@AllArgsConstructor
+public class FileDataWrapper<E extends Persistable<?>> extends SimpleDataWrapper<E> {
 
-    public BsonFileDataWrapper(E entity) {
-        super(entity);
+    private FileType fileType;
+    protected E data;
+
+    @Override
+    public E get() {
+        return data;
     }
 
     public DataWrapper<E> flush(String dataRoot) {
         String entityName = data.getClass().getSimpleName();
-        String filename = entityName + "#" + data.getId() + ".bson";
+        String filename = entityName + "#" + data.getId() + fileType.getSuffix();
         String filepath = dataRoot + filename;
         try {
-            BsonUtils.write(filepath, this);
+            fileType.write(filepath, this);
         } catch (IOException e) {
             throw new FileIOException("Failed to save " + filepath, e);
         }

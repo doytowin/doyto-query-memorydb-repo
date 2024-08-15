@@ -3,13 +3,13 @@ package win.doyto.query.memory;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import win.doyto.query.core.DoytoQuery;
+import win.doyto.query.memory.datawrapper.FileType;
 import win.doyto.query.memory.empolyee.EmployeeAggrQuery;
 import win.doyto.query.memory.empolyee.EmployeeAggrView;
 import win.doyto.query.memory.empolyee.EmployeeEntity;
 import win.doyto.query.memory.empolyee.EmployeeQuery;
 
-import java.util.ArrayList;
+import java.io.File;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,17 +26,8 @@ class MemoryQueryClientTest {
      */
     @BeforeAll
     static void beforeAll() {
-        MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> empDataAccess =
-                MemoryDataAccessManager.create(EmployeeEntity.class);
-
-        List<EmployeeEntity> employees = new ArrayList<>();
-        employees.add(new EmployeeEntity("bill", "dep1", "male", "des1", 100000, 5000, 20));
-        employees.add(new EmployeeEntity("john", "dep1", "male", "des1", 80000, 4000, 10));
-        employees.add(new EmployeeEntity("lisa", "dep1", "female", "des1", 80000, 4000, 10));
-        employees.add(new EmployeeEntity("rosie", "dep1", "female", "des2", 70000, 3000, 13));
-        employees.add(new EmployeeEntity("will", "dep2", "male", "des1", 60000, 3500, 18));
-        employees.add(new EmployeeEntity("murray", "dep2", "male", "des1", 70000, 3000, 13));
-        empDataAccess.batchInsert(employees);
+        String path = MemoryQueryClientTest.class.getResource(File.separator).getPath();
+        MemoryDataAccessManager.create(EmployeeEntity.class, path, FileType.JSON);
     }
 
     @Test
