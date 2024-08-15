@@ -1,9 +1,7 @@
 package win.doyto.query.memory;
 
-import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import win.doyto.query.annotation.GroupBy;
 import win.doyto.query.annotation.View;
 import win.doyto.query.core.AggregatedQuery;
@@ -15,6 +13,8 @@ import win.doyto.query.memory.aggregate.Aggregation;
 import win.doyto.query.memory.aggregate.GroupByCollector;
 import win.doyto.query.memory.aggregate.SingleColumnGroupByCollector;
 import win.doyto.query.memory.condition.BranchConditionNode;
+import win.doyto.query.memory.datamapper.DataMapper;
+import win.doyto.query.memory.datamapper.DefaultDataMapper;
 import win.doyto.query.memory.datawrapper.BsonFileDataWrapper;
 import win.doyto.query.memory.datawrapper.FileIOException;
 
@@ -98,18 +98,22 @@ public class MemoryDataAccessManager {
     }
 
     public <V> List<V> aggregate(Class<V> viewClass, AggregatedQuery aggregatedQuery) {
+        return aggregate(viewClass, aggregatedQuery, new DefaultDataMapper<>(viewClass));
+    }
+
+    public <V> List<V> aggregate(Class<V> viewClass, AggregatedQuery aggregatedQuery, DataMapper<V> dataMapper) {
         Class<?> entityClass = viewClass.getAnnotation(View.class).value();
         List<?> list = query(entityClass, aggregatedQuery.getEntityQuery());
 
-        Map<Map<String, Object>, V> groupByMap = list.parallelStream().collect(
-                groupingBy(buildGroupByFunc(viewClass), new GroupByCollector<>(viewClass)));
-        writeGroupByFields(groupByMap);
+        Map<Map<String, Object>, Map<String, Object>> groupByMap = list.parallelStream().collect(
+                groupingBy(buildGroupByFunc(viewClass), new GroupByCollector(viewClass)));
+        groupByMap.forEach((groupMap, dataMap) -> dataMap.putAll(groupMap));
 
-        Stream<V> stream = groupByMap.values().stream();
-            BranchConditionNode<V> root = new BranchConditionNode<>(aggregatedQuery);
-            LinkedHashMap<String, Integer> sortingMap = buildSortingMap(aggregatedQuery.getSort());
-            stream = sorting(stream.filter(root), sortingMap);
-        return stream.toList();
+        BranchConditionNode<V> root = new BranchConditionNode<>(aggregatedQuery);
+        Stream<V> stream = groupByMap.values().stream().map(dataMapper::map).filter(root);
+
+        LinkedHashMap<String, Integer> sortingMap = buildSortingMap(aggregatedQuery.getSort());
+        return sorting(stream, sortingMap).toList();
     }
 
     public <Q extends DoytoQuery> List<Object> aggregate(Q query, Class<?> entityClass, String exp) {
@@ -131,18 +135,4 @@ public class MemoryDataAccessManager {
         ));
     }
 
-    private static <V> void writeGroupByFields(Map<Map<String, Object>, V> groupByMap) {
-        for (Map.Entry<Map<String, Object>, V> groupByViewEntry : groupByMap.entrySet()) {
-            V view = groupByViewEntry.getValue();
-            Set<Map.Entry<String, Object>> entries = groupByViewEntry.getKey().entrySet();
-            for (Map.Entry<String, Object> groupByEntry : entries) {
-                writeField(view, groupByEntry.getKey(), groupByEntry.getValue());
-            }
-        }
-    }
-
-    @SneakyThrows
-    private static void writeField(Object view, String fieldName, Object value) {
-        FieldUtils.writeField(view, fieldName, value, true);
-    }
 }

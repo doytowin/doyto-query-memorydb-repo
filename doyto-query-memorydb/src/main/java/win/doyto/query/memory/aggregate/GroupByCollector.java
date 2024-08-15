@@ -1,6 +1,5 @@
 package win.doyto.query.memory.aggregate;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import win.doyto.query.annotation.Column;
 import win.doyto.query.core.AggregationPrefix;
@@ -22,12 +21,15 @@ import java.util.stream.Stream;
  * @author f0rb on 2024/7/22
  */
 @Slf4j
-public class GroupByCollector<V> implements Collector<Object, Map<String, List<Object>>, V> {
-    private final Class<V> viewClass;
-    private final List<AggregateMetadata> metadataList = new LinkedList<>();
+public class GroupByCollector implements Collector<Object, Map<String, List<Object>>, Map<String, Object>> {
+    private final List<AggregateMetadata> metadataList;
 
-    public GroupByCollector(Class<V> viewClass) {
-        this.viewClass = viewClass;
+    public GroupByCollector(Class<?> viewClass) {
+        this.metadataList = buildAggregateMetadata(viewClass);
+    }
+
+    private static List<AggregateMetadata> buildAggregateMetadata(Class<?> viewClass) {
+        List<AggregateMetadata> metadataList = new LinkedList<>();
         for (Field field : viewClass.getDeclaredFields()) {
             Column columnAnno = field.getAnnotation(Column.class);
             if (columnAnno != null) {
@@ -36,6 +38,7 @@ public class GroupByCollector<V> implements Collector<Object, Map<String, List<O
                 metadataList.add(new PrefixAggregateMetadata(field));
             }
         }
+        return metadataList;
     }
 
     @Override
@@ -65,20 +68,15 @@ public class GroupByCollector<V> implements Collector<Object, Map<String, List<O
         };
     }
 
-    @SneakyThrows
-    private V createTarget() {
-        return viewClass.getConstructor().newInstance();
-    }
-
     @Override
-    public Function<Map<String, List<Object>>, V> finisher() {
+    public Function<Map<String, List<Object>>, Map<String, Object>> finisher() {
         return map -> {
-            V view = createTarget();
+            Map<String, Object> dataMap = new HashMap<>();
             for (AggregateMetadata aggregateMetadata : metadataList) {
                 Object value = aggregateMetadata.execute(map);
-                CommonUtil.writeField(aggregateMetadata.getField(), view, value);
+                dataMap.put(aggregateMetadata.getField().getName(), value);
             }
-            return view;
+            return dataMap;
         };
     }
 
