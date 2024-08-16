@@ -21,7 +21,9 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SerializationUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import win.doyto.query.annotation.DomainPath;
 import win.doyto.query.annotation.GeneratedValue;
 import win.doyto.query.annotation.Id;
 import win.doyto.query.config.GlobalConfiguration;
@@ -34,11 +36,13 @@ import win.doyto.query.memory.condition.BranchConditionNode;
 import win.doyto.query.memory.datawrapper.*;
 import win.doyto.query.util.BeanUtil;
 import win.doyto.query.util.ColumnUtil;
+import win.doyto.query.util.CommonUtil;
 
 import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +69,7 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
     private final List<Field> fields;
     private final Field idField;
     private final Class<I> idClass;
+    private final List<Field> domainPathFields;
     @Setter
     private Function<E, DataWrapper<E>> createDataWrapperFunc = SimpleDataWrapper::new;
 
@@ -78,6 +83,7 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         } else {
             idField = null;
         }
+        domainPathFields = ColumnUtil.resolveDomainPathFields(entityClass);
     }
 
     void loadData(Class<E> entityClass, File root, FileType fileType) {
@@ -207,7 +213,34 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         if (query.needPaging()) {
             stream = truncateByPaging(stream, query);
         }
-        return stream.map(SerializationUtils::clone).toList();
+        List<E> entities = stream.map(SerializationUtils::clone).toList();
+        entities.forEach(entity -> domainPathFields.forEach(field -> {
+            String queryFieldName = buildQueryFieldName(field);
+            Object domainQuery = readField(query, queryFieldName);
+            if (domainQuery instanceof DoytoQuery q) {
+                boolean isListField = Collection.class.isAssignableFrom(field.getType());
+                Class<?> cls = isListField ? resolveActualReturnClass(field) : field.getType();
+
+                DomainPath domainPath = field.getAnnotation(DomainPath.class);
+                Object v = readFieldGetter(entity, domainPath.localField());
+
+                Field foreignField = getField(q, domainPath.foreignField());
+                CommonUtil.writeField(foreignField, q, v);
+
+                List<?> related = MemoryDataAccessManager.query(cls, q);
+
+                if (isListField) {
+                    writeField(field, entity, related);
+                } else if (!related.isEmpty()) {
+                    writeField(field, entity, related.get(0));
+                }
+            }
+        }));
+        return entities;
+    }
+
+    protected String buildQueryFieldName(Field joinField) {
+        return "with" + StringUtils.capitalize(joinField.getName());
     }
 
     @Override
