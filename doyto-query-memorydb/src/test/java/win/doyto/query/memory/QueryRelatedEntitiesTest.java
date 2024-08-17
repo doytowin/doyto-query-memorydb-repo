@@ -1,8 +1,10 @@
 package win.doyto.query.memory;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.core.DataAccess;
+import win.doyto.query.memory.domain.role.RoleEntity;
+import win.doyto.query.memory.domain.role.RoleQuery;
 import win.doyto.query.memory.domain.user.UserEntity;
 import win.doyto.query.memory.domain.user.UserQuery;
 
@@ -16,15 +18,15 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author f0rb on 2024/8/13
  */
-public class QueryRelatedEntitiesTest {
-    DataAccess<UserEntity, Long, UserQuery> userDataAccess = MemoryDataAccessManager.create(UserEntity.class);
+class QueryRelatedEntitiesTest {
+    static DataAccess<UserEntity, Long, UserQuery> userDataAccess = MemoryDataAccessManager.create(UserEntity.class);
+    static DataAccess<RoleEntity, Integer, RoleQuery> roleDataAccess = MemoryDataAccessManager.create(RoleEntity.class);
 
     public static List<UserEntity> initUserEntities() {
         List<UserEntity> userEntities = new ArrayList<>(5);
 
         for (int i = 1; i <= 5; ++i) {
             UserEntity userEntity = new UserEntity();
-            userEntity.setId((long) i);
             userEntity.setUsername("username" + i);
             userEntity.setPassword("password" + i);
             userEntity.setEmail("test" + i + "@163.com");
@@ -38,10 +40,32 @@ public class QueryRelatedEntitiesTest {
         return userEntities;
     }
 
-    @BeforeEach
-    void setUp() {
+    public static List<RoleEntity> initRoleEntities() {
+        List<RoleEntity> roleEntities = new ArrayList<>();
+
+        for (int i = 1; i <= 6; ++i) {
+            RoleEntity roleEntity = new RoleEntity();
+            roleEntity.setRoleName("vip" + i);
+            roleEntity.setRoleCode("VIP" + i);
+            roleEntity.setValid(i % 4 == 0);
+            if (i < 3) {
+                roleEntity.setCreateUserId(1L);
+            } else {
+                roleEntity.setCreateUserId(3L);
+            }
+            roleEntities.add(roleEntity);
+        }
+        roleEntities.get(0).setCreateUserId(0L);
+        return roleEntities;
+    }
+
+    @BeforeAll
+    static void beforeAll() {
         List<UserEntity> userEntities = initUserEntities();
         userDataAccess.batchInsert(userEntities);
+
+        List<RoleEntity> roleEntities = initRoleEntities();
+        roleDataAccess.batchInsert(roleEntities);
     }
 
     @Test
@@ -62,5 +86,19 @@ public class QueryRelatedEntitiesTest {
         assertThat(users.get(0).getCreateUser()).isNull();
         assertThat(users.get(1).getCreateUser().getId()).isEqualTo(1);
         assertThat(users.get(2).getCreateUser().getId()).isEqualTo(1);
+    }
+
+    @Test
+    void queryRolesWithCreateUser() {
+        UserQuery createUserQuery = UserQuery.builder().build();
+        RoleQuery roleQuery = RoleQuery.builder()
+                                       .withCreateUser(createUserQuery)
+                                       .pageSize(10).build();
+        List<RoleEntity> roles = roleDataAccess.query(roleQuery);
+
+        assertThat(roles).hasSize(6);
+        assertThat(roles.get(1).getCreateUser().getId()).isEqualTo(1);
+        assertThat(roles.get(2).getCreateUser().getId()).isEqualTo(3);
+        assertThat(roles.get(4).getCreateUser().getId()).isEqualTo(3);
     }
 }
