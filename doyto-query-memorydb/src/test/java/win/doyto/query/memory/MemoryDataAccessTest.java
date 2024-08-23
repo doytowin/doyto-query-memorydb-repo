@@ -31,6 +31,8 @@ class MemoryDataAccessTest {
 
     @BeforeEach
     void setUp() {
+        MemoryDataAccessManager.dataAccessMap.remove(TestEntity.class);
+        MemoryDataAccessManager.dataAccessMap.remove(EmployeeEntity.class);
         testMemoryDataAccess = MemoryDataAccessManager.create(TestEntity.class);
         testMemoryDataAccess.batchInsert(initUserEntities());
     }

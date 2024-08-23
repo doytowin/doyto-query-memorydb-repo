@@ -38,7 +38,7 @@ import static win.doyto.query.util.CommonUtil.toCamelCase;
  */
 @UtilityClass
 public class MemoryDataAccessManager {
-    private final Map<Class<?>, DataAccess<?, ?, ? super DoytoQuery>> dataAccessMap = new HashMap<>();
+    final Map<Class<?>, DataAccess<?, ?, ? super DoytoQuery>> dataAccessMap = new HashMap<>();
 
     public synchronized <E extends Persistable<I>, I extends Serializable, Q extends DoytoQuery>
     MemoryDataAccess<E, I, Q> create(Class<E> entityClass) {
@@ -53,6 +53,9 @@ public class MemoryDataAccessManager {
     @SuppressWarnings({"unchecked"})
     public synchronized <E extends Persistable<I>, I extends Serializable, Q extends DoytoQuery>
     MemoryDataAccess<E, I, Q> create(Class<E> entityClass, String store, FileType fileType) {
+        if (dataAccessMap.containsKey(entityClass)) {
+            return (MemoryDataAccess<E, I, Q>) (MemoryDataAccess<E, I, DoytoQuery>) dataAccessMap.get(entityClass);
+        }
         MemoryDataAccess<E, I, DoytoQuery> dataAccess = new MemoryDataAccess<>(entityClass);
         if (store != null) {
             String dataRoot = store + entityClass.getSimpleName();
