@@ -55,7 +55,7 @@ public class MemoryDataAccessManager {
     MemoryDataAccess<E, I, Q> create(Class<E> entityClass, String store, FileType fileType) {
         MemoryDataAccess<E, I, DoytoQuery> dataAccess = new MemoryDataAccess<>(entityClass);
         if (store != null) {
-            String dataRoot = store + entityClass.getSimpleName() + File.separator;
+            String dataRoot = store + entityClass.getSimpleName();
             dataAccess.setCreateDataWrapperFunc(e -> new FileDataWrapper<>(e, fileType, dataRoot).flush());
             File root = new File(dataRoot);
             if (!root.exists() && !root.mkdirs()) {

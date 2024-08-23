@@ -76,6 +76,7 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
             for (String filename : files) {
                 File file = new File(root, filename);
                 FileDataWrapper<E> dataWrapper = fileType.load(file, typeReference);
+                dataWrapper.setRoot(root.getPath());
                 entitiesMap.put(dataWrapper.get().getId(), dataWrapper);
             }
             long max = entitiesMap.keySet().stream().mapToLong(value -> ((Number) value).longValue()).max().orElse(0);
@@ -171,7 +172,10 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
     @Override
     public int delete(Q query) {
         List<E> list = query(query);
-        list.stream().map(Persistable::getId).forEach(entitiesMap::remove);
+        list.stream().map(Persistable::getId).forEach(key -> {
+            DataWrapper<E> dataWrapper = entitiesMap.remove(key);
+            dataWrapper.delete();
+        });
         return list.size();
     }
 

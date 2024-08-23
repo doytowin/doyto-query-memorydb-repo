@@ -7,6 +7,7 @@ import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.core.PageList;
 import win.doyto.query.memory.datawrapper.FileType;
 import win.doyto.query.memory.empolyee.EmployeeEntity;
+import win.doyto.query.memory.empolyee.EmployeeQuery;
 import win.doyto.query.test.Account;
 import win.doyto.query.test.TestEntity;
 import win.doyto.query.test.TestQuery;
@@ -203,5 +204,23 @@ class MemoryDataAccessTest {
 
         employeeDataAccess.delete(7);
         assertThat(file).doesNotExist();
+    }
+
+    @Test
+    void shouldDeleteFileWhenDeleteByQuery() {
+        String path = MemoryDataAccessTest.class.getResource(File.separator).getPath();
+        MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> employeeDataAccess
+                = MemoryDataAccessManager.create(EmployeeEntity.class, path, FileType.JSON);
+
+        employeeDataAccess.create(new EmployeeEntity());
+        employeeDataAccess.create(new EmployeeEntity());
+        File file7 = new File(path, "EmployeeEntity" + File.separator + "EmployeeEntity#7.json");
+        File file8 = new File(path, "EmployeeEntity" + File.separator + "EmployeeEntity#8.json");
+        assertThat(file7).exists();
+        assertThat(file8).exists();
+
+        employeeDataAccess.delete(EmployeeQuery.builder().idGe(7).build());
+        assertThat(file7).doesNotExist();
+        assertThat(file8).doesNotExist();
     }
 }

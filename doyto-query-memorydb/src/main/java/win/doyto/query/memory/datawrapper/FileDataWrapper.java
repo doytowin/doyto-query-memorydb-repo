@@ -16,6 +16,7 @@ import java.io.IOException;
  *
  * @author f0rb on 2024/8/12
  */
+@SuppressWarnings("java:S2065")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -51,6 +52,6 @@ public class FileDataWrapper<E extends Persistable<?>> implements DataWrapper<E>
     private String makeFilepath() {
         String entityName = data.getClass().getSimpleName();
         String filename = entityName + "#" + data.getId() + fileType.getSuffix();
-        return root + filename;
+        return root + File.separator + filename;
     }
 }
