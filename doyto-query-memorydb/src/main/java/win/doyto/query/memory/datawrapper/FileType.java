@@ -41,8 +41,8 @@ public enum FileType {
         fileWriter.write(filepath, target);
     }
 
-    public <E extends Persistable<I>, I extends Serializable> FileDataWrapper
-    load(File file, TypeReference<FileDataWrapper<E>> typeReference) throws IOException {
+    public <E extends Persistable<I>, I extends Serializable>
+    FileDataWrapper<E> load(File file, TypeReference<FileDataWrapper<E>> typeReference) throws IOException {
         return fileLoader.load(file, typeReference);
     }
 

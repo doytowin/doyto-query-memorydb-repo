@@ -8,6 +8,8 @@ package win.doyto.query.memory.datawrapper;
 public interface DataWrapper<E> {
     E get();
 
+    void delete();
+
     @SuppressWarnings("unchecked")
     static <T> DataWrapper<T> empty() {
         return (DataWrapper<T>) SimpleDataWrapper.EMPTY;

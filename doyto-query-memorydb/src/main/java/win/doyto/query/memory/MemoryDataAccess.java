@@ -78,6 +78,8 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
                 FileDataWrapper<E> dataWrapper = fileType.load(file, typeReference);
                 entitiesMap.put(dataWrapper.get().getId(), dataWrapper);
             }
+            long max = entitiesMap.keySet().stream().mapToLong(value -> ((Number) value).longValue()).max().orElse(0);
+            idGenerator.set(max);
         } catch (Exception e) {
             throw new FileIOException("Failed to load data from: " + root.getAbsolutePath(), e);
         }
@@ -158,7 +160,12 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
 
     @Override
     public int delete(IdWrapper<I> idWrapper) {
-        return entitiesMap.remove(idWrapper.getId()) == null ? 0 : 1;
+        DataWrapper<E> dataWrapper = entitiesMap.remove(idWrapper.getId());
+        if (dataWrapper != null) {
+            dataWrapper.delete();
+            return 1;
+        }
+        return 0;
     }
 
     @Override

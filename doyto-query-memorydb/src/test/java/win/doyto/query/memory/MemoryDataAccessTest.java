@@ -3,11 +3,15 @@ package win.doyto.query.memory;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.core.PageList;
+import win.doyto.query.memory.datawrapper.FileType;
+import win.doyto.query.memory.empolyee.EmployeeEntity;
 import win.doyto.query.test.Account;
 import win.doyto.query.test.TestEntity;
 import win.doyto.query.test.TestQuery;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,8 +41,8 @@ class MemoryDataAccessTest {
         List<TestEntity> entities = page.getList();
         assertThat(page.getTotal()).isEqualTo(5);
         assertThat(entities).hasSize(2)
-                .extracting("id")
-                .containsExactly(3, 4);
+                            .extracting("id")
+                            .containsExactly(3, 4);
     }
 
     @Test
@@ -77,7 +81,7 @@ class MemoryDataAccessTest {
         TestQuery testQuery = TestQuery.builder().build();
         List<Integer> idList = testMemoryDataAccess.queryIds(testQuery);
         assertThat(idList).hasSize(5)
-                .containsExactly(1, 2, 3, 4, 5);
+                          .containsExactly(1, 2, 3, 4, 5);
     }
 
     @Test
@@ -86,14 +90,14 @@ class MemoryDataAccessTest {
         List<TestEntity> entities = testMemoryDataAccess.queryColumns(testQuery,
                 TestEntity.class, "id", "username", "pass");
         assertThat(entities).hasSize(5)
-                .extracting("id", "username", "password")
-                .containsExactly(
-                        Tuple.tuple(1, "username1", null),
-                        Tuple.tuple(2, "username2", null),
-                        Tuple.tuple(3, "username3", null),
-                        Tuple.tuple(4, "username4", null),
-                        Tuple.tuple(5, "f0rb", null)
-                );
+                            .extracting("id", "username", "password")
+                            .containsExactly(
+                                    Tuple.tuple(1, "username1", null),
+                                    Tuple.tuple(2, "username2", null),
+                                    Tuple.tuple(3, "username3", null),
+                                    Tuple.tuple(4, "username4", null),
+                                    Tuple.tuple(5, "f0rb", null)
+                            );
     }
 
     @Test
@@ -185,5 +189,19 @@ class MemoryDataAccessTest {
         TestQuery testQuery = TestQuery.builder().accountsOr(Arrays.asList(account1, account2)).build();
         List<TestEntity> entities = testMemoryDataAccess.query(testQuery);
         assertThat(entities).hasSize(2);
+    }
+
+    @Test
+    void shouldDeleteFileWhenDeleteById() {
+        String path = MemoryDataAccessTest.class.getResource(File.separator).getPath();
+        MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> employeeDataAccess
+                = MemoryDataAccessManager.create(EmployeeEntity.class, path, FileType.JSON);
+
+        employeeDataAccess.create(new EmployeeEntity());
+        File file = new File(path, "EmployeeEntity" + File.separator + "EmployeeEntity#7.json");
+        assertThat(file).exists();
+
+        employeeDataAccess.delete(7);
+        assertThat(file).doesNotExist();
     }
 }

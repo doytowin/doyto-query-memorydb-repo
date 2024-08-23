@@ -24,4 +24,9 @@ public class SimpleDataWrapper<E> implements DataWrapper<E> {
     public E get() {
         return data;
     }
+
+    @Override
+    public void delete() {
+        //nothing to delete
+    }
 }
