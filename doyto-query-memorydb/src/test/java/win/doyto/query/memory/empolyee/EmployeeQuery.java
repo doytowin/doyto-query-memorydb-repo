@@ -19,6 +19,7 @@ import win.doyto.query.core.PageQuery;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmployeeQuery extends PageQuery {
+    private EmployeeQuery empAnd;
     private Integer idGe;
     private String gender;
     @Subquery(select = "avg(salary)", from = EmployeeEntity.class)

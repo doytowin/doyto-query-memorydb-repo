@@ -59,7 +59,7 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
         for (Field field : fields) {
             Object value = readField(field, target);
             if (isValidValue(value, field)) {
-                ConditionNode<E> child = buildChild(field, value);
+                ConditionNode<E> child = buildChild(field, value, EMPTY);
                 if (!(child instanceof BranchConditionNode<?> branchNode) || branchNode.count > 0) {
                     // add when child is leaf node or non-empty branch node
                     delegate = and ? delegate.and(child) : delegate.or(child);
@@ -89,10 +89,7 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
         return ColumnUtil.filterFields(queryClass, ColumnUtil::shouldRetain).toArray(Field[]::new);
     }
 
-    private static <T> ConditionNode<T> buildChild(Field queryField, Object queryFieldValue) {
-        return buildChild(queryField, queryFieldValue, EMPTY);
-    }
-
+    @SuppressWarnings("java:S3776")
     private static <T> ConditionNode<T> buildChild(Field queryField, Object queryFieldValue, String path) {
         String alias = StringUtils.isBlank(path) ? EMPTY : path + ".";
         ConditionNode<T> child;
@@ -115,7 +112,11 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
                 child = new LeafConditionNode<>(queryField.getName(),
                         queryFieldValue, subquery.from()[0], subquery.select());
             } else if (Query.class.isAssignableFrom(queryField.getType())) {
-                child = buildAndBranchNodeForNested(alias + queryField.getName(), queryFieldValue);
+                if (queryField.getName().endsWith("And")) {
+                    child = new BranchConditionNode<>(queryFieldValue, true);
+                } else {
+                    child = buildAndBranchNodeForNested(alias + queryField.getName(), queryFieldValue);
+                }
             } else {
                 child = new LeafConditionNode<>(alias + queryField.getName(), queryFieldValue);
             }

@@ -8,7 +8,6 @@ import win.doyto.query.memory.datawrapper.FileType;
 import win.doyto.query.memory.empolyee.EmployeeAggrView;
 import win.doyto.query.memory.empolyee.EmployeeEntity;
 import win.doyto.query.memory.empolyee.EmployeeHaving;
-import win.doyto.query.memory.empolyee.EmployeeQuery;
 
 import java.io.File;
 import java.util.List;
@@ -55,18 +54,6 @@ class MemoryAggregateTest {
                 .containsExactly(
                         Tuple.tuple("dep1", "female", "des1", 4000.0),
                         Tuple.tuple("dep1", "male", "des1", 4500.0)
-                );
-    }
-
-    @Test
-    void supportSubquery() {
-        EmployeeQuery query = EmployeeQuery.builder().gender("male").salaryGt(EmployeeQuery.builder().build()).build();
-        List<EmployeeEntity> entities = MemoryDataAccessManager.query(EmployeeEntity.class, query);
-        assertThat(entities)
-                .extracting("id", "gender", "salary")
-                .containsExactlyInAnyOrder(
-                        Tuple.tuple(1, "male", 100000),
-                        Tuple.tuple(2, "male", 80000)
                 );
     }
 

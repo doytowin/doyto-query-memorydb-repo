@@ -28,6 +28,7 @@ import static win.doyto.query.test.TestEntity.initUserEntities;
 class MemoryDataAccessTest {
 
     MemoryDataAccess<TestEntity, Integer, TestQuery> testMemoryDataAccess;
+    String path = MemoryDataAccessTest.class.getResource(File.separator).getPath();
 
     @BeforeEach
     void setUp() {
@@ -194,9 +195,20 @@ class MemoryDataAccessTest {
         assertThat(entities).hasSize(2);
     }
 
+
+    @Test
+    void supportSuffixAndWithQueryType() {
+        MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> employeeDataAccess
+                = MemoryDataAccessManager.create(EmployeeEntity.class, path, FileType.JSON);
+
+        EmployeeQuery empAnd = EmployeeQuery.builder().gender("male").idGe(3).build();
+        EmployeeQuery employeeQuery = EmployeeQuery.builder().empAnd(empAnd).build();
+        List<EmployeeEntity> entities = employeeDataAccess.query(employeeQuery);
+        assertThat(entities).hasSize(2);
+    }
+
     @Test
     void shouldDeleteFileWhenDeleteById() {
-        String path = MemoryDataAccessTest.class.getResource(File.separator).getPath();
         MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> employeeDataAccess
                 = MemoryDataAccessManager.create(EmployeeEntity.class, path, FileType.JSON);
 
@@ -210,7 +222,6 @@ class MemoryDataAccessTest {
 
     @Test
     void shouldDeleteFileWhenDeleteByQuery() {
-        String path = MemoryDataAccessTest.class.getResource(File.separator).getPath();
         MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> employeeDataAccess
                 = MemoryDataAccessManager.create(EmployeeEntity.class, path, FileType.JSON);
 
@@ -224,5 +235,20 @@ class MemoryDataAccessTest {
         employeeDataAccess.delete(EmployeeQuery.builder().idGe(7).build());
         assertThat(file7).doesNotExist();
         assertThat(file8).doesNotExist();
+    }
+
+    @Test
+    void supportSubquery() {
+        MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> employeeDataAccess
+                = MemoryDataAccessManager.create(EmployeeEntity.class, path, FileType.JSON);
+
+        EmployeeQuery query = EmployeeQuery.builder().gender("male").salaryGt(EmployeeQuery.builder().build()).build();
+        List<EmployeeEntity> entities = employeeDataAccess.query(query);
+        assertThat(entities)
+                .extracting("id", "gender", "salary")
+                .containsExactlyInAnyOrder(
+                        Tuple.tuple(1, "male", 100000),
+                        Tuple.tuple(2, "male", 80000)
+                );
     }
 }
