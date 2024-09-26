@@ -4,6 +4,7 @@ import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.core.DataAccess;
+import win.doyto.query.core.PageQuery;
 import win.doyto.query.memory.inventory.*;
 
 import java.io.File;
@@ -44,7 +45,7 @@ class NestedQueryTest {
 
     @Test
     void supportAggregateForNestedFields() {
-        List<InventoryView> entities = MemoryDataAccessManager.aggregate(InventoryView.class, new InventoryAggrQuery());
+        List<InventoryView> entities = MemoryDataAccessManager.aggregate(InventoryView.class, new PageQuery());
         assertThat(entities)
                 .extracting("status", "sumQty", "sumHeight")
                 .containsExactlyInAnyOrder(

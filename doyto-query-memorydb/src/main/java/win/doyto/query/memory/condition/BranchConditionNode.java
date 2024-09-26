@@ -2,11 +2,14 @@ package win.doyto.query.memory.condition;
 
 import org.apache.commons.lang3.StringUtils;
 import win.doyto.query.annotation.Subquery;
+import win.doyto.query.core.DoytoQuery;
+import win.doyto.query.core.Having;
 import win.doyto.query.core.Query;
 import win.doyto.query.util.ColumnUtil;
 import win.doyto.query.util.CommonUtil;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,8 +51,11 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
      * @param and    true to an AND node, false to an OR node
      */
     public BranchConditionNode(Object target, boolean and) {
+        this(target, and, queryFields(target.getClass()));
+    }
+
+    BranchConditionNode(Object target, boolean and, Field[] fields) {
         delegate = and ? t -> true : t -> false;
-        Field[] fields = queryFields(target.getClass());
         for (Field field : fields) {
             Object value = readField(field, target);
             if (isValidValue(value, field)) {
@@ -63,7 +69,19 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
         }
     }
 
+    public static <V> BranchConditionNode<V> buildHaving(DoytoQuery query) {
+        if (query instanceof Having) {
+            Field[] fields = Arrays.stream(query.getClass().getDeclaredFields())
+                                   .filter(ColumnUtil::shouldRetain).toArray(Field[]::new);
+            return new BranchConditionNode<>(query, true, fields);
+        }
+        return new BranchConditionNode<>(t->true, 0);
+    }
+
     public static Field[] queryFields(Class<?> queryClass) {
+        if (Arrays.stream(queryClass.getInterfaces()).toList().contains(Having.class)) {
+            queryClass = queryClass.getSuperclass();
+        }
         return classFieldsMap.computeIfAbsent(queryClass, BranchConditionNode::filterFields);
     }
 

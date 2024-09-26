@@ -3,10 +3,11 @@ package win.doyto.query.memory;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import win.doyto.query.core.PageQuery;
 import win.doyto.query.memory.datawrapper.FileType;
-import win.doyto.query.memory.empolyee.EmployeeAggrQuery;
 import win.doyto.query.memory.empolyee.EmployeeAggrView;
 import win.doyto.query.memory.empolyee.EmployeeEntity;
+import win.doyto.query.memory.empolyee.EmployeeHaving;
 import win.doyto.query.memory.empolyee.EmployeeQuery;
 
 import java.io.File;
@@ -15,25 +16,25 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * MemoryQueryClientTest
+ * MemoryAggregateTest
  *
  * @author f0rb on 2024/7/22
  */
-class MemoryQueryClientTest {
+class MemoryAggregateTest {
 
     /**
      * The data comes from <a href="https://stackoverflow.com/questions/72038822/aggregate-multiple-fields-grouping-by-multiple-fields-in-java-8">here</a>.
      */
     @BeforeAll
     static void beforeAll() {
-        String path = MemoryQueryClientTest.class.getResource(File.separator).getPath();
+        String path = MemoryDataAccessManager.class.getResource(File.separator).getPath();
         MemoryDataAccessManager.create(EmployeeEntity.class, path, FileType.JSON);
     }
 
     @Test
     void aggregate() {
-        EmployeeAggrQuery aggrQuery = EmployeeAggrQuery.builder().sort("maxSalary,desc;avgSalary").build();
-        List<EmployeeAggrView> testViews = MemoryDataAccessManager.aggregate(EmployeeAggrView.class, aggrQuery);
+        PageQuery pageQuery = PageQuery.builder().sort("maxSalary,desc;avgSalary").build();
+        List<EmployeeAggrView> testViews = MemoryDataAccessManager.aggregate(EmployeeAggrView.class, pageQuery);
 
         assertThat(testViews).hasSize(4).containsExactly(
                 new EmployeeAggrView("dep1", "male", "des1", 2, 90000, 4500, 15.0, 100000, 80000, 20, 10, 30, 94500, 1.05),
@@ -46,8 +47,8 @@ class MemoryQueryClientTest {
 
     @Test
     void supportHaving() {
-        EmployeeAggrQuery aggrQuery = EmployeeAggrQuery.builder().avgBonusGe(4000).build();
-        List<EmployeeAggrView> testViews = MemoryDataAccessManager.aggregate(EmployeeAggrView.class, aggrQuery);
+        EmployeeHaving having = EmployeeHaving.builder().avgBonusGe(4000).build();
+        List<EmployeeAggrView> testViews = MemoryDataAccessManager.aggregate(EmployeeAggrView.class, having);
 
         assertThat(testViews)
                 .extracting("department", "gender", "designation", "avgBonus")

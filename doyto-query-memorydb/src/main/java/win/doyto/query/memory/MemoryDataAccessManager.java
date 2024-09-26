@@ -4,10 +4,7 @@ import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import win.doyto.query.annotation.GroupBy;
 import win.doyto.query.annotation.View;
-import win.doyto.query.core.AggregatedQuery;
-import win.doyto.query.core.DataAccess;
 import win.doyto.query.core.DoytoQuery;
-import win.doyto.query.core.PageQuery;
 import win.doyto.query.entity.Persistable;
 import win.doyto.query.memory.aggregate.Aggregation;
 import win.doyto.query.memory.aggregate.GroupByCollector;
@@ -38,7 +35,7 @@ import static win.doyto.query.util.CommonUtil.toCamelCase;
  */
 @UtilityClass
 public class MemoryDataAccessManager {
-    final Map<Class<?>, DataAccess<?, ?, ? super DoytoQuery>> dataAccessMap = new HashMap<>();
+    final Map<Class<?>, MemoryDataAccess<?, ?, ? super DoytoQuery>> dataAccessMap = new HashMap<>();
 
     public synchronized <E extends Persistable<I>, I extends Serializable, Q extends DoytoQuery>
     MemoryDataAccess<E, I, Q> create(Class<E> entityClass) {
@@ -72,12 +69,9 @@ public class MemoryDataAccessManager {
     }
 
     @SuppressWarnings({"unchecked"})
-    public static <E, Q extends DoytoQuery> List<E> query(Class<E> entityClass, Q query) {
-        DataAccess<?, ?, ? super DoytoQuery> doytoQueryDataAccess = dataAccessMap.get(entityClass);
-        if (query == null) {
-            query = (Q) new PageQuery();
-        }
-        return (List<E>) doytoQueryDataAccess.query(query);
+    public static <E> List<E> query(Class<E> entityClass, DoytoQuery query) {
+        MemoryDataAccess<?, ?, ? super DoytoQuery> dataAccess = dataAccessMap.get(entityClass);
+        return (List<E>) dataAccess.filter(query).toList();
     }
 
     static LinkedHashMap<String, Integer> buildSortingMap(String sort) {
@@ -106,26 +100,26 @@ public class MemoryDataAccessManager {
         return stream;
     }
 
-    public <V> List<V> aggregate(Class<V> viewClass, AggregatedQuery aggregatedQuery) {
-        return aggregate(viewClass, aggregatedQuery, new DefaultDataMapper<>(viewClass));
+    public <V> List<V> aggregate(Class<V> viewClass, DoytoQuery query) {
+        return aggregate(viewClass, query, new DefaultDataMapper<>(viewClass));
     }
 
-    public <V> List<V> aggregate(Class<V> viewClass, AggregatedQuery aggregatedQuery, DataMapper<V> dataMapper) {
+    public <V> List<V> aggregate(Class<V> viewClass, DoytoQuery query, DataMapper<V> dataMapper) {
         Class<?> entityClass = viewClass.getAnnotation(View.class).value();
-        List<?> list = query(entityClass, aggregatedQuery.getEntityQuery());
+        List<?> list = query(entityClass, query);
 
         Map<Map<String, Object>, Map<String, Object>> groupByMap = list.parallelStream().collect(
                 groupingBy(buildGroupByFunc(viewClass), new GroupByCollector(viewClass)));
         groupByMap.forEach((groupMap, dataMap) -> dataMap.putAll(groupMap));
 
-        BranchConditionNode<V> root = new BranchConditionNode<>(aggregatedQuery);
+        BranchConditionNode<V> root = BranchConditionNode.buildHaving(query);
         Stream<V> stream = groupByMap.values().stream().map(dataMapper::map).filter(root);
 
-        LinkedHashMap<String, Integer> sortingMap = buildSortingMap(aggregatedQuery.getSort());
+        LinkedHashMap<String, Integer> sortingMap = buildSortingMap(query.getSort());
         return sorting(stream, sortingMap).toList();
     }
 
-    public <Q extends DoytoQuery> List<Object> aggregate(Q query, Class<?> entityClass, String exp) {
+    public List<Object> aggregate(DoytoQuery query, Class<?> entityClass, String exp) {
         List<?> list = query(entityClass, query);
 
         Map<Map<String, Object>, Object> groupByMap = list.parallelStream().collect(
