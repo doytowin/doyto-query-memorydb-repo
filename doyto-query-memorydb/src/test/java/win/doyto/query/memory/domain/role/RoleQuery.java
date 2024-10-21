@@ -22,4 +22,5 @@ public class RoleQuery extends PageQuery {
     private String roleName;
     private Boolean valid;
     private UserQuery withCreateUser;
+    private UserQuery withUsers;
 }

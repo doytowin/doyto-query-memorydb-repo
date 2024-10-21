@@ -6,6 +6,8 @@ import win.doyto.query.annotation.DomainPath;
 import win.doyto.query.entity.AbstractCommonEntity;
 import win.doyto.query.memory.domain.user.UserEntity;
 
+import java.util.List;
+
 /**
  * RoleEntity
  *
@@ -21,4 +23,8 @@ public class RoleEntity extends AbstractCommonEntity<Integer, Long> {
     // many-to-one
     @DomainPath(value = "user", localField = "createUserId")
     private UserEntity createUser;
+
+    // many-to-many
+    @DomainPath(value = {"role", "user"})
+    private List<UserEntity> users;
 }

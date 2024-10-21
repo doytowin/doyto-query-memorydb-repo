@@ -1,6 +1,7 @@
 package win.doyto.query.memory;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.core.DataAccess;
 import win.doyto.query.memory.domain.role.RoleEntity;
@@ -127,5 +128,18 @@ class QueryRelatedEntitiesTest {
         assertThat(users).hasSize(5);
         assertThat(users.get(0).getRoles()).hasSize(1);
         assertThat(users.get(1).getRoles()).isEmpty();
+    }
+
+    @DisplayName("Support reverse path")
+    @Test
+    void queryRoleWithUsers() {
+        RoleQuery roleQuery = RoleQuery.builder().withUsers(new UserQuery()).pageSize(10).build();
+        List<RoleEntity> roles = roleDataAccess.query(roleQuery);
+
+        assertThat(roles).hasSize(6);
+        assertThat(roles.get(0).getUsers()).hasSize(1);
+        assertThat(roles.get(1).getUsers()).hasSize(2);
+        assertThat(roles.get(2).getUsers()).hasSize(1);
+        assertThat(roles.get(5).getUsers()).isEmpty();
     }
 }
