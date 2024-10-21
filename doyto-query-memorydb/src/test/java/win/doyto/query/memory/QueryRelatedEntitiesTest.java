@@ -118,4 +118,14 @@ class QueryRelatedEntitiesTest {
         assertThat(users.get(1).getRoles()).hasSize(2);
         assertThat(users.get(2).getRoles()).isEmpty();
     }
+
+    @Test
+    void queryUserWithVip1Role() {
+        RoleQuery roleQuery = RoleQuery.builder().roleName("vip1").build();
+        UserQuery userQuery = UserQuery.builder().withRoles(roleQuery).build();
+        List<UserEntity> users = userDataAccess.query(userQuery);
+        assertThat(users).hasSize(5);
+        assertThat(users.get(0).getRoles()).hasSize(1);
+        assertThat(users.get(1).getRoles()).isEmpty();
+    }
 }

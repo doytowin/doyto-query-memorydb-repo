@@ -130,6 +130,8 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
                     child = new LeafConditionNode<>(fieldName, qfv);
                 } else if (queryField.getName().endsWith("And")) {
                     child = new BranchConditionNode<>(queryFieldValue);
+                } else if (DoytoQuery.class.isAssignableFrom(queryField.getType())) {
+                    child = emptyNode();
                 } else {
                     child = emptyNode();
                 }
