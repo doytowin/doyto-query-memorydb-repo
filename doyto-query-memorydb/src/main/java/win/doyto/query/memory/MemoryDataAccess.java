@@ -37,7 +37,6 @@ import win.doyto.query.memory.condition.LeafConditionNode;
 import win.doyto.query.memory.datawrapper.*;
 import win.doyto.query.util.BeanUtil;
 import win.doyto.query.util.ColumnUtil;
-import win.doyto.query.util.CommonUtil;
 
 import java.io.File;
 import java.io.Serializable;
@@ -230,13 +229,11 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         Class<?> cls = isListField ? resolveActualReturnClass(field) : field.getType();
 
         DomainPath domainPath = field.getAnnotation(DomainPath.class);
-        Object v = readFieldGetter(entity, domainPath.localField());
+        Object key = readFieldGetter(entity, domainPath.localField());
 
-        Field foreignField = getField(q, domainPath.foreignField());
         if (domainPath.value().length == 1) {
-            CommonUtil.writeField(foreignField, q, v);
-
-            List<?> related = MemoryDataAccessManager.query(cls, q);
+            LeafConditionNode<Object> conditionNode = new LeafConditionNode<>(domainPath.foreignField(), key);
+            List<?> related = MemoryDataAccessManager.query(cls, q, conditionNode);
             if (isListField) {
                 writeField(field, entity, related);
             } else if (!related.isEmpty()) {
@@ -245,21 +242,25 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
             return;
         }
         String qfn = domainPath.foreignField() + "In";
-        List<Object> k2List;
         String[] path = domainPath.value();
-        MemoryAssociationService<Object, Object> astService
-                = MemoryDataAccessManager.getAstService(path[0], path[1]);
-        if (astService != null) {
-            k2List = astService.queryK2ByK1(v);
-        } else {
-            astService = MemoryDataAccessManager.getAstService(path[1], path[0]);
-            k2List = astService.queryK1ByK2(v);
-        }
-        LeafConditionNode<Object> conditionNode = new LeafConditionNode<>(qfn, k2List);
+        List<Object> targetIdList = getTargetIdList(key, path[0], path[1]);
+        LeafConditionNode<Object> conditionNode = new LeafConditionNode<>(qfn, targetIdList);
 
-        List<?> related = MemoryDataAccessManager.query(cls, q)
-                .stream().filter(conditionNode).toList();
+        List<?> related = MemoryDataAccessManager.query(cls, q, conditionNode);
         writeField(field, entity, related);
+    }
+
+    private static List<Object> getTargetIdList(Object v, String path0, String path1) {
+        List<Object> targetIdList;
+        MemoryAssociationService<Object, Object> astService
+                = MemoryDataAccessManager.getAstService(path0, path1);
+        if (astService != null) {
+            targetIdList = astService.queryK2ByK1(v);
+        } else {
+            astService = MemoryDataAccessManager.getAstService(path1, path0);
+            targetIdList = astService.queryK1ByK2(v);
+        }
+        return targetIdList;
     }
 
     protected String buildQueryFieldName(Field joinField) {

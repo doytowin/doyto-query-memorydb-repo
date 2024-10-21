@@ -100,7 +100,7 @@ public class MemoryDataAccessManager {
         return (List<E>) dataAccess.filter(query).toList();
     }
 
-    final Map<UniqueKey<String, String>, MemoryAssociationService<?, ?>> associationMap = new ConcurrentHashMap<>();
+    private final Map<UniqueKey<String, String>, MemoryAssociationService<?, ?>> associationMap = new ConcurrentHashMap<>();
 
     public void register(String e1Name, String e2Name) {
         MemoryAssociationService<Object, Object> astService = new MemoryAssociationService<>(e1Name, e2Name);
