@@ -33,6 +33,7 @@ import win.doyto.query.core.IdWrapper;
 import win.doyto.query.core.PageList;
 import win.doyto.query.entity.Persistable;
 import win.doyto.query.memory.condition.BranchConditionNode;
+import win.doyto.query.memory.condition.LeafConditionNode;
 import win.doyto.query.memory.datawrapper.*;
 import win.doyto.query.util.BeanUtil;
 import win.doyto.query.util.ColumnUtil;
@@ -218,25 +219,41 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
             String queryFieldName = buildQueryFieldName(field);
             Object domainQuery = readField(query, queryFieldName);
             if (domainQuery instanceof DoytoQuery q) {
-                boolean isListField = Collection.class.isAssignableFrom(field.getType());
-                Class<?> cls = isListField ? resolveActualReturnClass(field) : field.getType();
-
-                DomainPath domainPath = field.getAnnotation(DomainPath.class);
-                Object v = readFieldGetter(entity, domainPath.localField());
-
-                Field foreignField = getField(q, domainPath.foreignField());
-                CommonUtil.writeField(foreignField, q, v);
-
-                List<?> related = MemoryDataAccessManager.query(cls, q);
-
-                if (isListField) {
-                    writeField(field, entity, related);
-                } else if (!related.isEmpty()) {
-                    writeField(field, entity, related.get(0));
-                }
+                queryWithRelatedEntities(entity, field, q);
             }
         }));
         return entities;
+    }
+
+    private static <E extends Persistable<I>, I extends Serializable> void queryWithRelatedEntities(E entity, Field field, DoytoQuery q) {
+        boolean isListField = Collection.class.isAssignableFrom(field.getType());
+        Class<?> cls = isListField ? resolveActualReturnClass(field) : field.getType();
+
+        DomainPath domainPath = field.getAnnotation(DomainPath.class);
+        Object v = readFieldGetter(entity, domainPath.localField());
+
+        Field foreignField = getField(q, domainPath.foreignField());
+        if (domainPath.value().length == 1) {
+            CommonUtil.writeField(foreignField, q, v);
+
+            List<?> related = MemoryDataAccessManager.query(cls, q);
+            if (isListField) {
+                writeField(field, entity, related);
+            } else if (!related.isEmpty()) {
+                writeField(field, entity, related.get(0));
+            }
+            return;
+        }
+        String[] path = domainPath.value();
+        MemoryAssociationService<Object, Object> astService
+                = MemoryDataAccessManager.getAstService(path[0], path[1]);
+        List<Object> k2List = astService.queryK2ByK1(v);
+        String qfn = domainPath.foreignField() + "In";
+        LeafConditionNode<Object> conditionNode = new LeafConditionNode<>(qfn, k2List);
+
+        List<?> related = MemoryDataAccessManager.query(cls, q)
+                .stream().filter(conditionNode).toList();
+        writeField(field, entity, related);
     }
 
     protected String buildQueryFieldName(Field joinField) {

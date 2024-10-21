@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import win.doyto.query.annotation.GroupBy;
 import win.doyto.query.annotation.View;
 import win.doyto.query.core.DoytoQuery;
+import win.doyto.query.core.UniqueKey;
 import win.doyto.query.entity.Persistable;
 import win.doyto.query.memory.aggregate.Aggregation;
 import win.doyto.query.memory.aggregate.GroupByCollector;
@@ -37,6 +38,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -96,6 +98,18 @@ public class MemoryDataAccessManager {
     public static <E> List<E> query(Class<E> entityClass, DoytoQuery query) {
         MemoryDataAccess<?, ?, ? super DoytoQuery> dataAccess = dataAccessMap.get(entityClass);
         return (List<E>) dataAccess.filter(query).toList();
+    }
+
+    final Map<UniqueKey<String, String>, MemoryAssociationService<?, ?>> associationMap = new ConcurrentHashMap<>();
+
+    public void register(String e1Name, String e2Name) {
+        MemoryAssociationService<Object, Object> astService = new MemoryAssociationService<>(e1Name, e2Name);
+        associationMap.put(new UniqueKey<>(e1Name, e2Name), astService);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <K1, K2> MemoryAssociationService<K1, K2> getAstService(String e1Name, String e2Name) {
+        return (MemoryAssociationService<K1, K2>) associationMap.get(new UniqueKey<>(e1Name, e2Name));
     }
 
     static LinkedHashMap<String, Integer> buildSortingMap(String sort) {

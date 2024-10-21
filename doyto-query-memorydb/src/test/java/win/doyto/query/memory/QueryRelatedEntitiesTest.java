@@ -9,6 +9,7 @@ import win.doyto.query.memory.domain.user.UserEntity;
 import win.doyto.query.memory.domain.user.UserQuery;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class QueryRelatedEntitiesTest {
     static DataAccess<UserEntity, Long, UserQuery> userDataAccess = MemoryDataAccessManager.create(UserEntity.class);
     static DataAccess<RoleEntity, Integer, RoleQuery> roleDataAccess = MemoryDataAccessManager.create(RoleEntity.class);
+    static MemoryAssociationService<Long, Integer> userRoleAstService;
 
     public static List<UserEntity> initUserEntities() {
         List<UserEntity> userEntities = new ArrayList<>(5);
@@ -66,6 +68,11 @@ class QueryRelatedEntitiesTest {
 
         List<RoleEntity> roleEntities = initRoleEntities();
         roleDataAccess.batchInsert(roleEntities);
+
+        MemoryDataAccessManager.register("user", "role");
+        userRoleAstService = MemoryDataAccessManager.getAstService("user", "role");
+        userRoleAstService.reassociateForK1(1L, Arrays.asList(1, 2, 3));
+        userRoleAstService.reassociateForK1(2L, Arrays.asList(2, 4));
     }
 
     @Test
@@ -100,5 +107,15 @@ class QueryRelatedEntitiesTest {
         assertThat(roles.get(1).getCreateUser().getId()).isEqualTo(1);
         assertThat(roles.get(2).getCreateUser().getId()).isEqualTo(3);
         assertThat(roles.get(4).getCreateUser().getId()).isEqualTo(3);
+    }
+
+    @Test
+    void queryUserWithRoles() {
+        UserQuery userQuery = UserQuery.builder().withRoles(RoleQuery.builder().build()).build();
+        List<UserEntity> users = userDataAccess.query(userQuery);
+        assertThat(users).hasSize(5);
+        assertThat(users.get(0).getRoles()).hasSize(3);
+        assertThat(users.get(1).getRoles()).hasSize(2);
+        assertThat(users.get(2).getRoles()).isEmpty();
     }
 }
