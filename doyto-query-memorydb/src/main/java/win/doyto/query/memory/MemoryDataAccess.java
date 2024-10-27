@@ -262,15 +262,15 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
                 = MemoryDataAccessManager.getAstService(path0, path1);
         if (astService != null) {
             targetIdList = astService.queryK2ByK1s(v);
-            String queryName = path1 + "Query";
-            Object value = readField(q, queryName);
-            if (value instanceof DoytoQuery query) {
-                List<?> entityIds = MemoryDataAccessManager.queryIds(path1, query);
-                targetIdList.retainAll(entityIds);
-            }
         } else {
             astService = MemoryDataAccessManager.getAstService(path1, path0);
             targetIdList = astService.queryK1ByK2s(v);
+        }
+        String queryName = path1 + "Query";
+        Object value = readField(q, queryName);
+        if (value instanceof DoytoQuery query) {
+            List<?> entityIds = MemoryDataAccessManager.queryIds(path1, query);
+            targetIdList.retainAll(entityIds);
         }
         return targetIdList;
     }

@@ -195,11 +195,35 @@ class QueryRelatedEntitiesTest {
     @Test
     void queryUserWithPermsViaValidRole() {
         RoleQuery roleQuery = RoleQuery.builder().valid(true).build();
-        PermissionQuery withPerms =  PermissionQuery.builder().roleQuery(roleQuery).build();
+        PermissionQuery withPerms = PermissionQuery.builder().roleQuery(roleQuery).build();
         UserQuery userQuery = UserQuery.builder().withPerms(withPerms).build();
         List<UserEntity> users = userDataAccess.query(userQuery);
         assertThat(users).hasSize(5);
         assertThat(users.get(0).getPerms()).extracting("id").containsExactly(1, 3, 4);
         assertThat(users.get(1).getPerms()).extracting("id").containsExactly(3);
+    }
+
+    /**
+     * Query permissions with users, ignoring relationship allocated by invalid roles.
+     * <p>
+     * Perm-3 is assigned to role-2,
+     * role-2 is assigned to user-1 and user-2,
+     * so perm-3 is assigned to user-1 and user-2,
+     * <p>
+     * Perm-5 is assigned to role-4,
+     * role-4 is assigned to user-2,
+     * role-4.valid is false,
+     * so perm-5 is not assigned to user-2,
+     */
+    @Test
+    void queryPermWithUsersViaValidRoles() {
+        RoleQuery roleQuery = RoleQuery.builder().valid(true).build();
+        UserQuery withUsers = UserQuery.builder().roleQuery(roleQuery).build();
+        PermissionQuery permQuery = PermissionQuery.builder().withUsers(withUsers).build();
+        List<PermEntity> perms = permDataAccess.query(permQuery);
+        assertThat(perms).hasSize(10);
+        assertThat(perms.get(0).getUsers()).extracting("id").containsExactly(1L);
+        assertThat(perms.get(2).getUsers()).extracting("id").containsExactly(1L, 2L);
+        assertThat(perms.get(4).getUsers()).extracting("id").isEmpty();
     }
 }
