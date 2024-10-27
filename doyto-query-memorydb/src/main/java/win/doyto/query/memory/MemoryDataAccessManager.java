@@ -33,6 +33,7 @@ import win.doyto.query.memory.datamapper.DefaultDataMapper;
 import win.doyto.query.memory.datawrapper.FileDataWrapper;
 import win.doyto.query.memory.datawrapper.FileIOException;
 import win.doyto.query.memory.datawrapper.FileType;
+import win.doyto.query.util.ColumnUtil;
 
 import java.io.File;
 import java.io.Serializable;
@@ -56,6 +57,7 @@ import static win.doyto.query.util.CommonUtil.toCamelCase;
 @UtilityClass
 public class MemoryDataAccessManager {
     final Map<Class<?>, MemoryDataAccess<?, ?, ? super DoytoQuery>> dataAccessMap = new HashMap<>();
+    final Map<String, Class<?>> entityMap = new HashMap<>();
 
     public synchronized <E extends Persistable<I>, I extends Serializable, Q extends DoytoQuery>
     MemoryDataAccess<E, I, Q> create(Class<E> entityClass) {
@@ -85,6 +87,7 @@ public class MemoryDataAccessManager {
         }
 
         dataAccessMap.put(entityClass, dataAccess);
+        registerEntity(entityClass);
         return (MemoryDataAccess<E, I, Q>) dataAccess;
     }
 
@@ -105,6 +108,19 @@ public class MemoryDataAccessManager {
     public void register(String e1Name, String e2Name) {
         MemoryAssociationService<Object, Object> astService = new MemoryAssociationService<>(e1Name, e2Name);
         associationMap.put(new UniqueKey<>(e1Name, e2Name), astService);
+    }
+
+    public void registerEntity(Class<?> entityClass) {
+        String entityName = entityClass.getSimpleName();
+        entityName = StringUtils.removeEnd(entityName, "Entity");
+        entityName = ColumnUtil.convertColumn(entityName);
+        entityMap.put(entityName, entityClass);
+    }
+
+    @SuppressWarnings("java:S1452")
+    public List<?> queryIds(String entity, DoytoQuery query) {
+        Class<?> clazz = entityMap.get(entity);
+        return dataAccessMap.get(clazz).queryIds(query);
     }
 
     @SuppressWarnings("unchecked")

@@ -53,7 +53,7 @@ class QueryRelatedEntitiesTest {
             RoleEntity roleEntity = new RoleEntity();
             roleEntity.setRoleName("vip" + i);
             roleEntity.setRoleCode("VIP" + i);
-            roleEntity.setValid(i % 4 == 0);
+            roleEntity.setValid(i % 4 != 0);
             if (i < 3) {
                 roleEntity.setCreateUserId(1L);
             } else {
@@ -182,5 +182,24 @@ class QueryRelatedEntitiesTest {
         assertThat(perms).hasSize(10);
         assertThat(perms.get(0).getUsers()).extracting("id").containsExactly(1L);
         assertThat(perms.get(2).getUsers()).extracting("id").containsExactly(1L, 2L);
+    }
+
+    /**
+     * Query users with permissions, ignoring relationship allocated by invalid roles.
+     * User-2 has role-2 and role-4,
+     * role-2 has perm-3,
+     * role-4 has perm-5,
+     * role-4.valid is false,
+     * so user-2 only has perm-3.
+     */
+    @Test
+    void queryUserWithPermsViaValidRole() {
+        RoleQuery roleQuery = RoleQuery.builder().valid(true).build();
+        PermissionQuery withPerms =  PermissionQuery.builder().roleQuery(roleQuery).build();
+        UserQuery userQuery = UserQuery.builder().withPerms(withPerms).build();
+        List<UserEntity> users = userDataAccess.query(userQuery);
+        assertThat(users).hasSize(5);
+        assertThat(users.get(0).getPerms()).extracting("id").containsExactly(1, 3, 4);
+        assertThat(users.get(1).getPerms()).extracting("id").containsExactly(3);
     }
 }

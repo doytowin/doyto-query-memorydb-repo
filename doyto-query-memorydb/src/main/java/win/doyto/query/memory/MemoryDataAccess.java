@@ -247,7 +247,7 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         int i = 0;
         List<Object> targetIdList = List.of(key);
         do {
-            targetIdList = getTargetIdList(targetIdList, path[i], path[i + 1]);
+            targetIdList = getTargetIdList(targetIdList, path[i], path[i + 1], q);
             conditionNode = new LeafConditionNode<>(qfn, targetIdList);
 
         } while (++i < path.length - 1);
@@ -256,12 +256,18 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         writeField(field, entity, related);
     }
 
-    private static List<Object> getTargetIdList(List<Object> v, String path0, String path1) {
+    private static List<Object> getTargetIdList(List<Object> v, String path0, String path1, DoytoQuery q) {
         List<Object> targetIdList;
         MemoryAssociationService<Object, Object> astService
                 = MemoryDataAccessManager.getAstService(path0, path1);
         if (astService != null) {
             targetIdList = astService.queryK2ByK1s(v);
+            String queryName = path1 + "Query";
+            Object value = readField(q, queryName);
+            if (value instanceof DoytoQuery query) {
+                List<?> entityIds = MemoryDataAccessManager.queryIds(path1, query);
+                targetIdList.retainAll(entityIds);
+            }
         } else {
             astService = MemoryDataAccessManager.getAstService(path1, path0);
             targetIdList = astService.queryK1ByK2s(v);
