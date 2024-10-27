@@ -4,10 +4,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.core.DataAccess;
-import win.doyto.query.memory.domain.role.RoleEntity;
-import win.doyto.query.memory.domain.role.RoleQuery;
-import win.doyto.query.memory.domain.user.UserEntity;
-import win.doyto.query.memory.domain.user.UserQuery;
+import win.doyto.query.test.role.RoleEntity;
+import win.doyto.query.test.role.RoleQuery;
+import win.doyto.query.test.user.UserEntity;
+import win.doyto.query.test.user.UserQuery;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +35,6 @@ class QueryRelatedEntitiesTest {
             userEntity.setEmail("test" + i + "@163.com");
             userEntity.setMobile("1777888888" + i);
             userEntity.setValid(i % 2 == 0);
-            userEntity.setScore(i * 10);
             userEntity.setCreateUserId(1L);
             userEntities.add(userEntity);
         }
