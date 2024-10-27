@@ -243,22 +243,28 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         }
         String qfn = domainPath.foreignField() + "In";
         String[] path = domainPath.value();
-        List<Object> targetIdList = getTargetIdList(key, path[0], path[1]);
-        LeafConditionNode<Object> conditionNode = new LeafConditionNode<>(qfn, targetIdList);
+        LeafConditionNode<Object> conditionNode;
+        int i = 0;
+        List<Object> targetIdList = List.of(key);
+        do {
+            targetIdList = getTargetIdList(targetIdList, path[i], path[i + 1]);
+            conditionNode = new LeafConditionNode<>(qfn, targetIdList);
+
+        } while (++i < path.length - 1);
 
         List<?> related = MemoryDataAccessManager.query(cls, q, conditionNode);
         writeField(field, entity, related);
     }
 
-    private static List<Object> getTargetIdList(Object v, String path0, String path1) {
+    private static List<Object> getTargetIdList(List<Object> v, String path0, String path1) {
         List<Object> targetIdList;
         MemoryAssociationService<Object, Object> astService
                 = MemoryDataAccessManager.getAstService(path0, path1);
         if (astService != null) {
-            targetIdList = astService.queryK2ByK1(v);
+            targetIdList = astService.queryK2ByK1s(v);
         } else {
             astService = MemoryDataAccessManager.getAstService(path1, path0);
-            targetIdList = astService.queryK1ByK2(v);
+            targetIdList = astService.queryK1ByK2s(v);
         }
         return targetIdList;
     }

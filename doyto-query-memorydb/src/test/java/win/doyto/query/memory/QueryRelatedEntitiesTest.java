@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.core.DataAccess;
+import win.doyto.query.test.perm.PermEntity;
+import win.doyto.query.test.perm.PermissionQuery;
 import win.doyto.query.test.role.RoleEntity;
 import win.doyto.query.test.role.RoleQuery;
 import win.doyto.query.test.user.UserEntity;
@@ -23,7 +25,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class QueryRelatedEntitiesTest {
     static DataAccess<UserEntity, Long, UserQuery> userDataAccess = MemoryDataAccessManager.create(UserEntity.class);
     static DataAccess<RoleEntity, Integer, RoleQuery> roleDataAccess = MemoryDataAccessManager.create(RoleEntity.class);
+    static DataAccess<PermEntity, Integer, PermissionQuery> permDataAccess = MemoryDataAccessManager.create(PermEntity.class);
     static MemoryAssociationService<Long, Integer> userRoleAstService;
+    static MemoryAssociationService<Integer, Integer> rolePermAstService;
 
     public static List<UserEntity> initUserEntities() {
         List<UserEntity> userEntities = new ArrayList<>(5);
@@ -61,6 +65,17 @@ class QueryRelatedEntitiesTest {
         return roleEntities;
     }
 
+    private static List<PermEntity> initPermEntities() {
+        ArrayList<PermEntity> permEntities = new ArrayList<>();
+        for (int i = 1; i <= 10; ++i) {
+            PermEntity permEntity = new PermEntity();
+            permEntity.setPermName("user::perm-" + i);
+            permEntity.setValid(i % 4 == 0);
+            permEntities.add(permEntity);
+        }
+        return permEntities;
+    }
+
     @BeforeAll
     static void beforeAll() {
         List<UserEntity> userEntities = initUserEntities();
@@ -69,10 +84,19 @@ class QueryRelatedEntitiesTest {
         List<RoleEntity> roleEntities = initRoleEntities();
         roleDataAccess.batchInsert(roleEntities);
 
+        List<PermEntity> permEntities = initPermEntities();
+        permDataAccess.batchInsert(permEntities);
+
         MemoryDataAccessManager.register("user", "role");
         userRoleAstService = MemoryDataAccessManager.getAstService("user", "role");
         userRoleAstService.reassociateForK1(1L, Arrays.asList(1, 2, 3));
         userRoleAstService.reassociateForK1(2L, Arrays.asList(2, 4));
+
+        MemoryDataAccessManager.register("role", "perm");
+        rolePermAstService = MemoryDataAccessManager.getAstService("role", "perm");
+        rolePermAstService.reassociateForK1(1, List.of(1, 4));
+        rolePermAstService.reassociateForK1(2, List.of(3));
+        rolePermAstService.reassociateForK1(4, List.of(5));
     }
 
     @Test
@@ -140,5 +164,23 @@ class QueryRelatedEntitiesTest {
         assertThat(roles.get(1).getUsers()).hasSize(2);
         assertThat(roles.get(2).getUsers()).hasSize(1);
         assertThat(roles.get(5).getUsers()).isEmpty();
+    }
+
+    @Test
+    void queryUserWithPerms() {
+        UserQuery userQuery = UserQuery.builder().withPerms(new PermissionQuery()).build();
+        List<UserEntity> users = userDataAccess.query(userQuery);
+        assertThat(users).hasSize(5);
+        assertThat(users.get(0).getPerms()).extracting("id").containsExactly(1, 3, 4);
+        assertThat(users.get(1).getPerms()).extracting("id").containsExactly(3, 5);
+    }
+
+    @Test
+    void queryPermWithUsers() {
+        PermissionQuery permQuery = PermissionQuery.builder().withUsers(new UserQuery()).build();
+        List<PermEntity> perms = permDataAccess.query(permQuery);
+        assertThat(perms).hasSize(10);
+        assertThat(perms.get(0).getUsers()).extracting("id").containsExactly(1L);
+        assertThat(perms.get(2).getUsers()).extracting("id").containsExactly(1L, 2L);
     }
 }

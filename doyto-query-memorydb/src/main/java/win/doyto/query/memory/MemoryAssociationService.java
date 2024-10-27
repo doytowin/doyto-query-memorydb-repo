@@ -44,6 +44,16 @@ public class MemoryAssociationService<K1, K2> implements AssociationService<K1, 
                     .map(UniqueKey::getK1).toList();
     }
 
+    public List<K1> queryK1ByK2s(List<K2> k2s) {
+        return pairs.stream().filter(pair -> k2s.contains(pair.getK2()))
+                    .map(UniqueKey::getK1).toList();
+    }
+
+    public List<K2> queryK2ByK1s(List<K1> k1s) {
+        return pairs.stream().filter(pair -> k1s.contains(pair.getK1()))
+                    .map(UniqueKey::getK2).toList();
+    }
+
     @Override
     public List<K2> queryK2ByK1(K1 k1) {
         return pairs.stream().filter(pair -> pair.getK1().equals(k1))
