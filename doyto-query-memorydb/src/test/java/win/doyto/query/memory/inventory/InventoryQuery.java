@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import win.doyto.query.core.AggregationQuery;
 import win.doyto.query.core.PageQuery;
 
 /**
@@ -18,7 +17,7 @@ import win.doyto.query.core.PageQuery;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class InventoryQuery extends PageQuery implements AggregationQuery {
+public class InventoryQuery extends PageQuery {
 
     private SizeQuery size;
 

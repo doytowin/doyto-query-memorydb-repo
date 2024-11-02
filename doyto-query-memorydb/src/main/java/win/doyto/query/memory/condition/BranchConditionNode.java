@@ -26,6 +26,7 @@ import static win.doyto.query.util.CommonUtil.readField;
  */
 public class BranchConditionNode<E> implements ConditionNode<E> {
     private static final Map<Class<?>, Field[]> classFieldsMap = new ConcurrentHashMap<>();
+    private static final BranchConditionNode<?> EMPTY_NODE = new BranchConditionNode<>(t -> true, 0);
 
     private Predicate<E> delegate;
     private int count;
@@ -70,13 +71,18 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private static <T> BranchConditionNode<T> emptyNode() {
+        return (BranchConditionNode<T>) EMPTY_NODE;
+    }
+
     public static <V> BranchConditionNode<V> buildHaving(DoytoQuery query) {
         if (query instanceof Having) {
             Field[] fields = Arrays.stream(query.getClass().getDeclaredFields())
                                    .filter(ColumnUtil::shouldRetain).toArray(Field[]::new);
             return new BranchConditionNode<>(query, true, EMPTY, fields);
         }
-        return new BranchConditionNode<>(t->true, 0);
+        return emptyNode();
     }
 
     public static Field[] queryFields(Class<?> queryClass) {
@@ -96,15 +102,16 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
         if (queryField.getName().endsWith("Or")) {
             child = buildOrBranchNode(queryField, queryFieldValue);
         } else {
-            Subquery subquery = queryField.getAnnotation(Subquery.class);
-            if (subquery != null) {
-                child = new LeafConditionNode<>(queryField.getName(),
-                        queryFieldValue, subquery.from()[0], subquery.select());
-            } else if (Query.class.isAssignableFrom(queryField.getType())) {
-                if (queryField.getName().endsWith("And")) {
+            if (Query.class.isAssignableFrom(queryField.getType())) {
+                child = new BranchConditionNode<>(queryFieldValue, true, alias + queryField.getName());
+            } else if (DoytoQuery.class.isAssignableFrom(queryField.getType())) {
+                if (queryField.isAnnotationPresent(Subquery.class)) {
+                    Subquery subquery = queryField.getAnnotation(Subquery.class);
+                    child = new LeafConditionNode<>(queryField.getName(), queryFieldValue, subquery.from()[0], subquery.select());
+                } else if (queryField.getName().endsWith("And")) {
                     child = new BranchConditionNode<>(queryFieldValue);
                 } else {
-                    child = new BranchConditionNode<>(queryFieldValue, true, alias + queryField.getName());
+                    child = emptyNode();
                 }
             } else {
                 child = new LeafConditionNode<>(alias + queryField.getName(), queryFieldValue);

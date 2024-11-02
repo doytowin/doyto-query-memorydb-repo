@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -66,6 +67,12 @@ public class MemoryDataAccessManager {
 
         dataAccessMap.put(entityClass, dataAccess);
         return (MemoryDataAccess<E, I, Q>) dataAccess;
+    }
+
+    @SuppressWarnings({"unchecked", "java:S3740"})
+    public static <E> List<E> query(Class<E> entityClass, DoytoQuery query, Predicate another) {
+        MemoryDataAccess<?, ?, ? super DoytoQuery> dataAccess = dataAccessMap.get(entityClass);
+        return dataAccess.filter(query, another).toList();
     }
 
     @SuppressWarnings({"unchecked"})
@@ -128,7 +135,7 @@ public class MemoryDataAccessManager {
         return new ArrayList<>(groupByMap.values());
     }
 
-    private static Function<Object, Map<String, Object>> buildGroupByFunc(Class<?> viewClass) {
+    private Function<Object, Map<String, Object>> buildGroupByFunc(Class<?> viewClass) {
         List<String> groupByFields = Arrays.stream(viewClass.getDeclaredFields())
                                            .filter(field -> field.isAnnotationPresent(GroupBy.class))
                                            .map(Field::getName).toList();

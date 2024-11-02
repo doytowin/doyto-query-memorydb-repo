@@ -9,7 +9,10 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import win.doyto.query.annotation.GeneratedValue;
 import win.doyto.query.annotation.Id;
 import win.doyto.query.config.GlobalConfiguration;
-import win.doyto.query.core.*;
+import win.doyto.query.core.DataAccess;
+import win.doyto.query.core.DoytoQuery;
+import win.doyto.query.core.IdWrapper;
+import win.doyto.query.core.PageList;
 import win.doyto.query.entity.Persistable;
 import win.doyto.query.memory.condition.BranchConditionNode;
 import win.doyto.query.memory.datawrapper.*;
@@ -26,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static win.doyto.query.memory.MemoryDataAccessManager.buildSortingMap;
@@ -195,9 +199,14 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
         return filter(query).count();
     }
 
-    Stream<E> filter(Query query) {
+    Stream<E> filter(DoytoQuery query) {
         BranchConditionNode<E> root = new BranchConditionNode<>(query);
         return entitiesMap.values().stream().map(DataWrapper::get).filter(root);
+    }
+
+    Stream<E> filter(DoytoQuery query, Predicate<E> another) {
+        BranchConditionNode<E> root = new BranchConditionNode<>(query);
+        return entitiesMap.values().stream().map(DataWrapper::get).filter(root.and(another));
     }
 
     public PageList<E> page(Q query) {
