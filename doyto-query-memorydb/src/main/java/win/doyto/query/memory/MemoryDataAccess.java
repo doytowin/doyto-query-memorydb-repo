@@ -259,11 +259,11 @@ public class MemoryDataAccess<E extends Persistable<I>, I extends Serializable, 
     private static List<Object> getTargetIdList(List<Object> v, String path0, String path1, DoytoQuery q) {
         List<Object> targetIdList;
         MemoryAssociationService<Object, Object> astService
-                = MemoryDataAccessManager.getAstService(path0, path1);
+                = MemoryAssociationService.getAstService(path0, path1);
         if (astService != null) {
             targetIdList = astService.queryK2ByK1s(v);
         } else {
-            astService = MemoryDataAccessManager.getAstService(path1, path0);
+            astService = MemoryAssociationService.getAstService(path1, path0);
             targetIdList = astService.queryK1ByK2s(v);
         }
         String queryName = path1 + "Query";

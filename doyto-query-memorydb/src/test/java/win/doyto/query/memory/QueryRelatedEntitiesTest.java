@@ -87,13 +87,11 @@ class QueryRelatedEntitiesTest {
         List<PermEntity> permEntities = initPermEntities();
         permDataAccess.batchInsert(permEntities);
 
-        MemoryDataAccessManager.register("user", "role");
-        userRoleAstService = MemoryDataAccessManager.getAstService("user", "role");
+        userRoleAstService = new MemoryAssociationService<>("user", "role");
         userRoleAstService.reassociateForK1(1L, Arrays.asList(1, 2, 3));
         userRoleAstService.reassociateForK1(2L, Arrays.asList(2, 4));
 
-        MemoryDataAccessManager.register("role", "perm");
-        rolePermAstService = MemoryDataAccessManager.getAstService("role", "perm");
+        rolePermAstService = new MemoryAssociationService<>("role", "perm");
         rolePermAstService.reassociateForK1(1, List.of(1, 4));
         rolePermAstService.reassociateForK1(2, List.of(3));
         rolePermAstService.reassociateForK1(4, List.of(5));

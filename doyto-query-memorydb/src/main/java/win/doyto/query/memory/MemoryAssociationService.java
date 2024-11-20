@@ -17,13 +17,17 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("java:S6204")
 public class MemoryAssociationService<K1, K2> implements AssociationService<K1, K2> {
-    static final Map<UniqueKey<String, String>, Set<? extends UniqueKey<?, ?>>> associationMap = new ConcurrentHashMap<>();
-
+    static final Map<UniqueKey<String, String>, MemoryAssociationService<?, ?>> associationMap = new ConcurrentHashMap<>();
     private final Set<UniqueKey<K1, K2>> pairs;
 
     public MemoryAssociationService(String k1Name, String k2Name) {
         pairs = new LinkedHashSet<>();
-        associationMap.put(new UniqueKey<>(k1Name, k2Name), pairs);
+        associationMap.put(new UniqueKey<>(k1Name, k2Name), this);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T1, T2> MemoryAssociationService<T1, T2> getAstService(String e1Name, String e2Name) {
+        return (MemoryAssociationService<T1, T2>) associationMap.get(new UniqueKey<>(e1Name, e2Name));
     }
 
     @Override
