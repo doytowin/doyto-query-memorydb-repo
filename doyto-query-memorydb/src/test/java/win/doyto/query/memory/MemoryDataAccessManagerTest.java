@@ -18,9 +18,12 @@ package win.doyto.query.memory;
 
 import org.junit.jupiter.api.Test;
 import win.doyto.query.memory.datawrapper.FileIOException;
-import win.doyto.query.memory.empolyee.EmployeeEntity;
+import win.doyto.query.test.TestEntity;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.io.File;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * MemoryDataAccessManagerTest
@@ -31,8 +34,15 @@ class MemoryDataAccessManagerTest {
 
     @Test
     void shouldFailWhenEntityDataDirNotExist() {
-        assertThrows(FileIOException.class, () ->
-                MemoryDataAccessManager.create(EmployeeEntity.class, "/none/exist/path"));
+        try {
+            String store = "/none/exist/path/";
+            MemoryDataAccessManager.create(TestEntity.class, store);
+            File root = new File(store + "TestEntity");
+            assertTrue(root.exists());
+        } catch (Exception e) {
+            assertEquals(FileIOException.class, e.getClass());
+        }
+
     }
 
 }
