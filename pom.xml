@@ -25,6 +25,7 @@
         <groupId>win.doyto</groupId>
         <artifactId>doyto-oss-parent</artifactId>
         <version>6-SNAPSHOT</version>
+        <relativePath/>
     </parent>
 
     <artifactId>doyto-query-memorydb-repo</artifactId>
