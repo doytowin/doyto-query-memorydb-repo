@@ -30,10 +30,6 @@
     <artifactId>doyto-query-memorydb</artifactId>
     <name>DoytoQueryMemoryDB</name>
 
-    <properties>
-        <maven.deploy.skip>false</maven.deploy.skip>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>win.doyto</groupId>
