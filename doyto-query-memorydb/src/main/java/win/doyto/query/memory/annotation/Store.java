@@ -1,5 +1,5 @@
 /*
- * Copyright © 2022-2025 DoytoWin, Inc.
+ * Copyright © 2025 DoytoWin, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,24 @@
  * limitations under the License.
  */
 
-package win.doyto.query.memory.inventory;
+package win.doyto.query.memory.annotation;
 
-import lombok.Getter;
-import lombok.Setter;
-import win.doyto.query.entity.AbstractPersistable;
-import win.doyto.query.memory.annotation.Store;
+import win.doyto.query.memory.datawrapper.FileType;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * InventoryEntity
+ * Store records to files.
  *
- * @author f0rb on 2021-11-23
+ * @author f0rb on 2025/7/23
  */
-@Getter
-@Setter
-@Store
-public class InventoryEntity extends AbstractPersistable<Integer> {
-    private String item;
-    private Integer qty;
-    private InventorySize size;
-    private String status;
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Store {
+    /* The file location under classpath*/
+    String value() default "/";
+    FileType fileType() default FileType.BSON;
 }

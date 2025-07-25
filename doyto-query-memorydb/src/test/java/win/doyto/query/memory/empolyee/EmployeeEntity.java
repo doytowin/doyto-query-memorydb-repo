@@ -21,6 +21,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import win.doyto.query.entity.AbstractPersistable;
+import win.doyto.query.memory.annotation.Store;
+import win.doyto.query.memory.datawrapper.FileType;
 
 /**
  * EmployeeEntity
@@ -31,6 +33,7 @@ import win.doyto.query.entity.AbstractPersistable;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Store(fileType = FileType.JSON)
 public class EmployeeEntity extends AbstractPersistable<Integer> {
 
     private String name;

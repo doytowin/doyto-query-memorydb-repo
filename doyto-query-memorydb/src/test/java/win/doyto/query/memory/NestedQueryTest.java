@@ -17,13 +17,11 @@
 package win.doyto.query.memory;
 
 import org.assertj.core.groups.Tuple;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.core.DataAccess;
 import win.doyto.query.core.PageQuery;
 import win.doyto.query.memory.inventory.*;
 
-import java.io.File;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,13 +32,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author f0rb on 2024/8/8
  */
 class NestedQueryTest {
-    DataAccess<InventoryEntity, Integer, InventoryQuery> inventoryDataAccess;
-
-    @BeforeEach
-    void setUp() {
-        String path = this.getClass().getResource(File.separator).getPath();
-        inventoryDataAccess = MemoryDataAccessManager.create(InventoryEntity.class, path);
-    }
+    DataAccess<InventoryEntity, Integer, InventoryQuery> inventoryDataAccess
+            = MemoryDataAccessManager.create(InventoryEntity.class);
 
     @Test
     void supportNestedPath() {

@@ -17,33 +17,27 @@
 package win.doyto.query.memory;
 
 import org.assertj.core.groups.Tuple;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.core.PageQuery;
-import win.doyto.query.memory.datawrapper.FileType;
 import win.doyto.query.memory.empolyee.EmployeeAggrView;
 import win.doyto.query.memory.empolyee.EmployeeEntity;
 import win.doyto.query.memory.empolyee.EmployeeHaving;
 
-import java.io.File;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * MemoryAggregateTest
+ * <p>
+ * The data comes from <a href="https://stackoverflow.com/questions/72038822/aggregate-multiple-fields-grouping-by-multiple-fields-in-java-8">here</a>.
  *
  * @author f0rb on 2024/7/22
  */
 class MemoryAggregateTest {
 
-    /**
-     * The data comes from <a href="https://stackoverflow.com/questions/72038822/aggregate-multiple-fields-grouping-by-multiple-fields-in-java-8">here</a>.
-     */
-    @BeforeAll
-    static void beforeAll() {
-        String path = MemoryDataAccessManager.class.getResource(File.separator).getPath();
-        MemoryDataAccessManager.create(EmployeeEntity.class, path, FileType.JSON);
+    static {
+        MemoryDataAccessManager.create(EmployeeEntity.class);
     }
 
     @Test

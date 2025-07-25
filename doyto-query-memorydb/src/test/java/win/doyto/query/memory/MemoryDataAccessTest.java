@@ -21,7 +21,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.core.PageList;
-import win.doyto.query.memory.datawrapper.FileType;
 import win.doyto.query.memory.empolyee.EmployeeEntity;
 import win.doyto.query.memory.empolyee.EmployeeQuery;
 import win.doyto.query.test.Account;
@@ -43,6 +42,7 @@ import static win.doyto.query.test.TestEntity.initUserEntities;
  */
 class MemoryDataAccessTest {
 
+    MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> employeeDataAccess;
     MemoryDataAccess<TestEntity, Integer, TestQuery> testMemoryDataAccess;
     String path = MemoryDataAccessTest.class.getResource(File.separator).getPath();
 
@@ -50,6 +50,8 @@ class MemoryDataAccessTest {
     void setUp() {
         MemoryDataAccessManager.dataAccessMap.remove(TestEntity.class);
         MemoryDataAccessManager.dataAccessMap.remove(EmployeeEntity.class);
+
+        employeeDataAccess = MemoryDataAccessManager.create(EmployeeEntity.class);
         testMemoryDataAccess = MemoryDataAccessManager.create(TestEntity.class);
         testMemoryDataAccess.batchInsert(initUserEntities());
     }
@@ -214,9 +216,6 @@ class MemoryDataAccessTest {
 
     @Test
     void supportSuffixAndWithQueryType() {
-        MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> employeeDataAccess
-                = MemoryDataAccessManager.create(EmployeeEntity.class, path, FileType.JSON);
-
         EmployeeQuery empAnd = EmployeeQuery.builder().gender("male").idGe(3).build();
         EmployeeQuery employeeQuery = EmployeeQuery.builder().empAnd(empAnd).build();
         List<EmployeeEntity> entities = employeeDataAccess.query(employeeQuery);
@@ -225,9 +224,6 @@ class MemoryDataAccessTest {
 
     @Test
     void shouldDeleteFileWhenDeleteById() {
-        MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> employeeDataAccess
-                = MemoryDataAccessManager.create(EmployeeEntity.class, path, FileType.JSON);
-
         employeeDataAccess.create(new EmployeeEntity());
         File file = new File(path, "EmployeeEntity" + File.separator + "EmployeeEntity#7.json");
         assertThat(file).exists();
@@ -238,9 +234,6 @@ class MemoryDataAccessTest {
 
     @Test
     void shouldDeleteFileWhenDeleteByQuery() {
-        MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> employeeDataAccess
-                = MemoryDataAccessManager.create(EmployeeEntity.class, path, FileType.JSON);
-
         employeeDataAccess.create(new EmployeeEntity());
         employeeDataAccess.create(new EmployeeEntity());
         File file7 = new File(path, "EmployeeEntity" + File.separator + "EmployeeEntity#7.json");
@@ -255,9 +248,6 @@ class MemoryDataAccessTest {
 
     @Test
     void supportSubquery() {
-        MemoryDataAccess<EmployeeEntity, Integer, DoytoQuery> employeeDataAccess
-                = MemoryDataAccessManager.create(EmployeeEntity.class, path, FileType.JSON);
-
         EmployeeQuery query = EmployeeQuery.builder().gender("male").salaryGt(EmployeeQuery.builder().build()).build();
         List<EmployeeEntity> entities = employeeDataAccess.query(query);
         assertThat(entities)

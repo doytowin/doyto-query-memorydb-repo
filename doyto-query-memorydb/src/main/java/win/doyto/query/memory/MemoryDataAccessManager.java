@@ -25,6 +25,7 @@ import win.doyto.query.entity.Persistable;
 import win.doyto.query.memory.aggregate.Aggregation;
 import win.doyto.query.memory.aggregate.GroupByCollector;
 import win.doyto.query.memory.aggregate.SingleColumnGroupByCollector;
+import win.doyto.query.memory.annotation.Store;
 import win.doyto.query.memory.condition.BranchConditionNode;
 import win.doyto.query.memory.datamapper.DataMapper;
 import win.doyto.query.memory.datamapper.DefaultDataMapper;
@@ -56,12 +57,12 @@ public class MemoryDataAccessManager {
 
     public synchronized <E extends Persistable<I>, I extends Serializable, Q extends DoytoQuery>
     MemoryDataAccess<E, I, Q> create(Class<E> entityClass) {
-        return create(entityClass, null);
-    }
-
-    public synchronized <E extends Persistable<I>, I extends Serializable, Q extends DoytoQuery>
-    MemoryDataAccess<E, I, Q> create(Class<E> entityClass, String store) {
-        return create(entityClass, store, FileType.BSON);
+        Store store = entityClass.getAnnotation(Store.class);
+        if (store == null) {
+            return create(entityClass, null, FileType.BSON);
+        }
+        String path = MemoryDataAccessManager.class.getResource(store.value()).getPath();
+        return create(entityClass, path, store.fileType());
     }
 
     @SuppressWarnings({"unchecked"})
