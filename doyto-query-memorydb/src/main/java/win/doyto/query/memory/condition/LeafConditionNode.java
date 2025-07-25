@@ -17,12 +17,9 @@
 package win.doyto.query.memory.condition;
 
 import lombok.extern.slf4j.Slf4j;
-import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.core.QuerySuffix;
-import win.doyto.query.memory.MemoryDataAccessManager;
 
 import java.lang.reflect.Field;
-import java.util.List;
 import java.util.function.Predicate;
 
 import static win.doyto.query.core.QuerySuffix.*;
@@ -38,32 +35,18 @@ import static win.doyto.query.util.CommonUtil.readField;
 public class LeafConditionNode<E> implements ConditionNode<E> {
 
     private final String entityFieldName;
+    private final QuerySuffix querySuffix;
+    private final Object queryFieldValue;
     private final Predicate<Object> delegate;
-    private final String condition;
 
     public LeafConditionNode(String queryFieldName, Object queryFieldValue) {
-        QuerySuffix querySuffix = resolve(queryFieldName);
+        this.querySuffix = resolve(queryFieldName);
         this.entityFieldName = querySuffix.resolveColumnName(queryFieldName);
+        this.queryFieldValue = queryFieldValue;
         this.delegate = FilterExecutor.build(querySuffix, queryFieldValue);
-        this.condition = buildCondition(querySuffix, queryFieldValue);
     }
 
-    public LeafConditionNode(String queryFieldName, Object queryFieldValue, Class<?> entityClass, String exp) {
-        QuerySuffix querySuffix = resolve(queryFieldName);
-        this.entityFieldName = querySuffix.resolveColumnName(queryFieldName);
-
-        // do nested query when build leaf node condition
-        List<?> list = doSubquery(queryFieldValue, entityClass, exp);
-        Object qfv = querySuffix.name().endsWith("In") ? list : list.get(0);
-        this.delegate = FilterExecutor.build(querySuffix, qfv);
-        this.condition = buildCondition(querySuffix, qfv);
-    }
-
-    private static List<?> doSubquery(Object queryFieldValue, Class<?> entityClass, String exp) {
-        return MemoryDataAccessManager.aggregate((DoytoQuery) queryFieldValue, entityClass, exp);
-    }
-
-    private static String buildCondition(QuerySuffix querySuffix, Object queryFieldValue) {
+    private String buildCondition() {
         if (querySuffix == Null) {
             return Boolean.TRUE.equals(queryFieldValue) ? "== null" : "!= null";
         }
@@ -73,10 +56,15 @@ public class LeafConditionNode<E> implements ConditionNode<E> {
 
     @Override
     public boolean test(E entity) {
+        if (queryFieldValue == null) {
+            return false;
+        }
         Object entityFieldValue = readNestedField(entity, entityFieldName);
         boolean result = delegate.test(entityFieldValue);
-        log.debug("Filtering for [{}.{}]: ({} {}) -> {}", entity.getClass().getSimpleName(),
-                entityFieldName, entityFieldValue, condition, result);
+        if (log.isDebugEnabled()) {
+            log.debug("Filtering for [{}.{}]: ({} {}) -> {}", entity.getClass().getSimpleName(),
+                    entityFieldName, entityFieldValue, buildCondition(), result);
+        }
         return result;
     }
 
@@ -89,5 +77,10 @@ public class LeafConditionNode<E> implements ConditionNode<E> {
             }
         }
         return target;
+    }
+
+    @Override
+    public String toString() {
+        return "Condition: " + entityFieldName + " " + buildCondition();
     }
 }

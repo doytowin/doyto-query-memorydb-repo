@@ -39,5 +39,5 @@ public class EmployeeQuery extends PageQuery {
     private Integer idGe;
     private String gender;
     @Subquery(select = "avg(salary)", from = EmployeeEntity.class)
-    private EmployeeQuery salaryGt;
+    private EmployeeQuery salaryGt0;
 }

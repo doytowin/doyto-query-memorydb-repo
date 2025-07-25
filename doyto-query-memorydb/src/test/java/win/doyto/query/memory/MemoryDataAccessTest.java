@@ -248,7 +248,7 @@ class MemoryDataAccessTest {
 
     @Test
     void supportSubquery() {
-        EmployeeQuery query = EmployeeQuery.builder().gender("male").salaryGt(EmployeeQuery.builder().build()).build();
+        EmployeeQuery query = EmployeeQuery.builder().gender("male").salaryGt0(EmployeeQuery.builder().build()).build();
         List<EmployeeEntity> entities = employeeDataAccess.query(query);
         assertThat(entities)
                 .extracting("id", "gender", "salary")
@@ -256,5 +256,11 @@ class MemoryDataAccessTest {
                         Tuple.tuple(1, "male", 100000),
                         Tuple.tuple(2, "male", 80000)
                 );
+    }
+
+    @Test
+    void fixIndexOutOfBoundsInSubquery() {
+        EmployeeQuery query = EmployeeQuery.builder().salaryGt0(EmployeeQuery.builder().idGe(1000).build()).build();
+        assertThat(employeeDataAccess.count(query)).isEqualTo(0);
     }
 }

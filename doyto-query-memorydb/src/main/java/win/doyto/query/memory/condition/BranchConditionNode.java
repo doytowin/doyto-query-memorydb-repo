@@ -21,12 +21,14 @@ import win.doyto.query.annotation.Subquery;
 import win.doyto.query.core.DoytoQuery;
 import win.doyto.query.core.Having;
 import win.doyto.query.core.Query;
+import win.doyto.query.memory.MemoryDataAccessManager;
 import win.doyto.query.util.ColumnUtil;
 import win.doyto.query.util.CommonUtil;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -122,8 +124,10 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
                 child = new BranchConditionNode<>(queryFieldValue, true, alias + queryField.getName());
             } else if (DoytoQuery.class.isAssignableFrom(queryField.getType())) {
                 if (queryField.isAnnotationPresent(Subquery.class)) {
-                    Subquery subquery = queryField.getAnnotation(Subquery.class);
-                    child = new LeafConditionNode<>(queryField.getName(), queryFieldValue, subquery.from()[0], subquery.select());
+                    String fieldName = queryField.getName().replaceAll("\\d+$", "");
+                    // do subquery first when build leaf node condition
+                    Object qfv = doSubquery(fieldName, queryField, queryFieldValue);
+                    child = new LeafConditionNode<>(fieldName, qfv);
                 } else if (queryField.getName().endsWith("And")) {
                     child = new BranchConditionNode<>(queryFieldValue);
                 } else {
@@ -134,6 +138,12 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
             }
         }
         return child;
+    }
+
+    private static Object doSubquery(String fieldName, Field queryField, Object queryFieldValue) {
+        Subquery subquery = queryField.getAnnotation(Subquery.class);
+        List<?> list = MemoryDataAccessManager.aggregate(subquery.select(), subquery.from()[0], (DoytoQuery) queryFieldValue);
+        return fieldName.endsWith("In") ? list : list.isEmpty() ? null : list.get(0);
     }
 
     private static <T> ConditionNode<T> buildOrBranchNode(Field queryField, Object qfv) {

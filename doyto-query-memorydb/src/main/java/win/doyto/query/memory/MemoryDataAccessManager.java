@@ -143,7 +143,7 @@ public class MemoryDataAccessManager {
         return sorting(stream, sortingMap).toList();
     }
 
-    public List<Object> aggregate(DoytoQuery query, Class<?> entityClass, String exp) {
+    public List<Object> aggregate(String exp, Class<?> entityClass, DoytoQuery query) {
         List<?> list = query(entityClass, query);
 
         Map<Map<String, Object>, Object> groupByMap = list.parallelStream().collect(
