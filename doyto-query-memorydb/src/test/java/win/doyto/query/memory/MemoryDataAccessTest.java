@@ -261,6 +261,6 @@ class MemoryDataAccessTest {
     @Test
     void fixIndexOutOfBoundsInSubquery() {
         EmployeeQuery query = EmployeeQuery.builder().salaryGt0(EmployeeQuery.builder().idGe(1000).build()).build();
-        assertThat(employeeDataAccess.count(query)).isEqualTo(0);
+        assertThat(employeeDataAccess.count(query)).isZero();
     }
 }

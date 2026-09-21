@@ -124,7 +124,7 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
                 child = new BranchConditionNode<>(queryFieldValue, true, alias + queryField.getName());
             } else if (DoytoQuery.class.isAssignableFrom(queryField.getType())) {
                 if (queryField.isAnnotationPresent(Subquery.class)) {
-                    String fieldName = queryField.getName().replaceAll("\\d+$", "");
+                    String fieldName = queryField.getName().replaceAll("\\d?+$", "");
                     // do subquery first when build leaf node condition
                     Object qfv = doSubquery(fieldName, queryField, queryFieldValue);
                     child = new LeafConditionNode<>(fieldName, qfv);
@@ -143,7 +143,8 @@ public class BranchConditionNode<E> implements ConditionNode<E> {
     private static Object doSubquery(String fieldName, Field queryField, Object queryFieldValue) {
         Subquery subquery = queryField.getAnnotation(Subquery.class);
         List<?> list = MemoryDataAccessManager.aggregate(subquery.select(), subquery.from()[0], (DoytoQuery) queryFieldValue);
-        return fieldName.endsWith("In") ? list : list.isEmpty() ? null : list.get(0);
+        if (fieldName.endsWith("In")) return list;
+        return list.isEmpty() ? null : list.get(0);
     }
 
     private static <T> ConditionNode<T> buildOrBranchNode(Field queryField, Object qfv) {
